@@ -14,22 +14,34 @@ namespace StockApp.FactureForms
         private LigneFacture _ligneFacture;
         private List<Piece> _piecesList;
         private bool _isNewLigne;
+        private bool _dataLoaded = false;
 
         public LigneFactureForm(LigneFacture ligneFacture = null)
         {
             InitializeComponent();
             
-            // Obtenir le repository depuis le conteneur DI
-            _pieceRepository = Program.ServiceProvider.GetRequiredService<IPieceRepository>();
-            
-            _ligneFacture = ligneFacture ?? new LigneFacture { Id = Guid.NewGuid() };
-            _isNewLigne = ligneFacture == null;
-            
-            // Configuration du titre du formulaire
-            this.Text = _isNewLigne ? "Ajouter une ligne" : "Modifier une ligne";
-            
-            // Charger les pièces depuis la base de données
-            LoadPiecesAsync();
+            try
+            {
+                // Obtenir le repository depuis le conteneur DI
+                _pieceRepository = Program.ServiceProvider.GetRequiredService<IPieceRepository>();
+                
+                _ligneFacture = ligneFacture ?? new LigneFacture { Id = Guid.NewGuid() };
+                _isNewLigne = ligneFacture == null;
+                
+                // Configuration du titre du formulaire
+                this.Text = _isNewLigne ? "Ajouter une ligne" : "Modifier une ligne";
+                
+                // Désactiver le bouton de sauvegarde jusqu'à ce que les données soient chargées
+                this.saveButton.Enabled = false;
+                
+                // Charger les pièces depuis la base de données
+                LoadPiecesAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'initialisation: {ex.Message}", 
+                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         private async void LoadPiecesAsync()
@@ -43,13 +55,24 @@ namespace StockApp.FactureForms
                 var pieces = await _pieceRepository.GetAllAsync();
                 _piecesList = new List<Piece>(pieces);
                 
+                if (_piecesList.Count == 0)
+                {
+                    MessageBox.Show("Aucune pièce trouvée dans la base de données. Veuillez d'abord ajouter des pièces.", 
+                        "Avertissement", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                
                 // Mettre à jour la ComboBox
+                pieceComboBox.DataSource = null;
                 pieceComboBox.DataSource = _piecesList;
                 pieceComboBox.DisplayMember = "Reference";
                 pieceComboBox.ValueMember = "Id";
                 
                 // Réactiver la ComboBox
                 pieceComboBox.Enabled = true;
+                
+                // Activer le bouton de sauvegarde
+                saveButton.Enabled = true;
                 
                 // Charger les données de la ligne si en mode édition
                 if (!_isNewLigne)
@@ -68,23 +91,41 @@ namespace StockApp.FactureForms
                         }
                     }
                 }
+                else if (pieceComboBox.Items.Count > 0)
+                {
+                    // Sélectionner la première pièce par défaut
+                    pieceComboBox.SelectedIndex = 0;
+                }
+                
+                _dataLoaded = true;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Erreur lors du chargement des pièces: {ex.Message}", 
                     "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.Close();
             }
         }
         
         private void PieceComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (!_dataLoaded) return;
+            
             if (pieceComboBox.SelectedItem is Piece selectedPiece)
             {
-                // Mettre à jour le prix unitaire par défaut en fonction de la pièce sélectionnée
-                prixUnitaireNumericUpDown.Value = selectedPiece.PrixVenteHT;
-                
-                // Mettre à jour l'affichage du total
-                CalculerEtAfficherTotal();
+                try
+                {
+                    // Mettre à jour le prix unitaire par défaut en fonction de la pièce sélectionnée
+                    prixUnitaireNumericUpDown.Value = selectedPiece.PrixVenteHT;
+                    
+                    // Mettre à jour l'affichage du total
+                    CalculerEtAfficherTotal();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de la sélection de la pièce: {ex.Message}", 
+                        "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
         

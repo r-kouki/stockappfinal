@@ -5,12 +5,16 @@ using System.Threading.Tasks;
 using StockApp.Data.Entities;
 using StockApp.Data.Repositories;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
+using StockApp.Data;
 
 namespace StockApp.FactureForms
 {
     public partial class FactureAchatDetailsForm : Form
     {
         private readonly IFournisseurRepository _fournisseurRepository;
+        private readonly IMouvementStockRepository _mouvementStockRepository;
+        private readonly IPieceRepository _pieceRepository;
         private FactureAchat _facture;
         private bool _isNewFacture;
         private List<Fournisseur> _fournisseurs;
@@ -19,8 +23,10 @@ namespace StockApp.FactureForms
         {
             InitializeComponent();
             
-            // Obtenir le repository depuis le conteneur DI
+            // Obtenir les repositories depuis le conteneur DI
             _fournisseurRepository = Program.ServiceProvider.GetRequiredService<IFournisseurRepository>();
+            _mouvementStockRepository = Program.ServiceProvider.GetRequiredService<IMouvementStockRepository>();
+            _pieceRepository = Program.ServiceProvider.GetRequiredService<IPieceRepository>();
             
             _facture = facture ?? new FactureAchat { Id = Guid.NewGuid(), Date = DateTime.Now, LignesFacture = new List<LigneFacture>() };
             _isNewFacture = facture == null;
@@ -85,7 +91,7 @@ namespace StockApp.FactureForms
             }
         }
         
-        private void SaveButton_Click(object sender, EventArgs e)
+        private async void SaveButton_Click(object sender, EventArgs e)
         {
             // Valider les entrées
             if (fournisseurComboBox.SelectedItem == null)
@@ -96,21 +102,35 @@ namespace StockApp.FactureForms
                 return;
             }
             
-            // Validation supplémentaire...
-            
-            // Mettre à jour l'objet facture avec les valeurs du formulaire
-            _facture.Date = dateTimePicker.Value;
-            
-            // Récupérer l'ID du fournisseur sélectionné
-            if (fournisseurComboBox.SelectedItem is Fournisseur selectedFournisseur)
+            // Vérifier qu'il y a au moins une ligne de facture
+            if (_facture.LignesFacture == null || _facture.LignesFacture.Count == 0)
             {
-                _facture.FournisseurId = selectedFournisseur.Id;
-                _facture.Fournisseur = selectedFournisseur;
+                MessageBox.Show("Vous devez ajouter au moins une ligne à la facture.", 
+                    "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
             
-            // Définir le DialogResult pour indiquer le succès
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            try
+            {
+                // Mettre à jour l'objet facture avec les valeurs du formulaire
+                _facture.Date = dateTimePicker.Value;
+                
+                // Récupérer l'ID du fournisseur sélectionné
+                if (fournisseurComboBox.SelectedItem is Fournisseur selectedFournisseur)
+                {
+                    _facture.FournisseurId = selectedFournisseur.Id;
+                    _facture.Fournisseur = selectedFournisseur;
+                }
+                
+                // Définir le DialogResult pour indiquer le succès
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'enregistrement de la facture: {ex.Message}", 
+                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         private void CancelButton_Click(object sender, EventArgs e)
@@ -119,36 +139,95 @@ namespace StockApp.FactureForms
             this.Close();
         }
         
-        private void AddLigneButton_Click(object sender, EventArgs e)
+        private async void AddLigneButton_Click(object sender, EventArgs e)
         {
-            // Ouvrir le formulaire d'ajout de ligne
-            var ligneForm = new LigneFactureForm();
-            
-            if (ligneForm.ShowDialog() == DialogResult.OK)
+            try
             {
-                // Ajouter la ligne à la facture
-                _facture.LignesFacture.Add(ligneForm.LigneFacture);
+                // Ouvrir le formulaire d'ajout de ligne
+                var ligneForm = new LigneFactureForm();
                 
-                // Lier la ligne à cette facture
-                ligneForm.LigneFacture.FactureId = _facture.Id;
-                ligneForm.LigneFacture.Facture = _facture;
-                
-                // Rafraîchir la grille des lignes
-                RefreshLignesFactureGrid();
-                
-                // Créer un mouvement de stock (entrée) associé
-                var mouvement = new MouvementStock
+                if (ligneForm.ShowDialog() == DialogResult.OK)
                 {
-                    Id = Guid.NewGuid(),
-                    Date = DateTime.Now,
-                    Type = "ENTREE",
-                    Quantite = ligneForm.LigneFacture.Quantite,
-                    PieceId = ligneForm.LigneFacture.PieceId,
-                    FactureId = _facture.Id
-                };
-                
-                // Dans une vraie application, ce mouvement serait enregistré dans la base de données
-                System.Diagnostics.Debug.WriteLine($"Mouvement de stock créé: {mouvement.Type} - {mouvement.Quantite} - Pièce {mouvement.PieceId}");
+                    // Vérifier que la pièce existe
+                    if (ligneForm.LigneFacture == null || ligneForm.LigneFacture.PieceId == Guid.Empty)
+                    {
+                        MessageBox.Show("Données de ligne invalides.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    
+                    // Ajouter la ligne à la facture
+                    if (_facture.LignesFacture == null)
+                    {
+                        _facture.LignesFacture = new List<LigneFacture>();
+                    }
+                    
+                    _facture.LignesFacture.Add(ligneForm.LigneFacture);
+                    
+                    // Lier la ligne à cette facture
+                    ligneForm.LigneFacture.FactureId = _facture.Id;
+                    ligneForm.LigneFacture.Facture = _facture;
+                    
+                    // Rafraîchir la grille des lignes
+                    RefreshLignesFactureGrid();
+                    
+                    try
+                    {
+                        // Obtenir la pièce correspondante
+                        var piece = await _pieceRepository.GetByIdAsync(ligneForm.LigneFacture.PieceId);
+                        if (piece != null)
+                        {
+                            // Créer un mouvement de stock (entrée) associé
+                            var mouvement = new MouvementStock
+                            {
+                                Id = Guid.NewGuid(),
+                                Date = DateTime.Now,
+                                Type = "ENTREE",
+                                Quantite = ligneForm.LigneFacture.Quantite,
+                                PieceId = ligneForm.LigneFacture.PieceId,
+                                FactureId = _facture.Id
+                            };
+                            
+                            // Enregistrer le mouvement dans la base de données
+                            await _mouvementStockRepository.AddAsync(mouvement);
+                            
+                            // Mettre à jour le stock de la pièce
+                            int nouvelleQuantite = piece.Stock + ligneForm.LigneFacture.Quantite;
+                            
+                            // Utiliser une approche différente pour mettre à jour le stock
+                            // En créant un contexte séparé pour cette opération
+                            using (var scope = Program.ServiceProvider.CreateScope())
+                            {
+                                var stockContext = scope.ServiceProvider.GetRequiredService<StockContext>();
+                                var pieceToUpdate = await stockContext.Pieces.FindAsync(piece.Id);
+                                if (pieceToUpdate != null)
+                                {
+                                    pieceToUpdate.Stock = nouvelleQuantite;
+                                    await stockContext.SaveChangesAsync();
+                                }
+                            }
+                            
+                            MessageBox.Show($"Ligne ajoutée et stock mis à jour (+{ligneForm.LigneFacture.Quantite})", 
+                                "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            // Si la pièce n'est pas trouvée, ajouter juste la ligne sans mettre à jour le stock
+                            MessageBox.Show("Ligne ajoutée. Attention: impossible de mettre à jour le stock car la pièce n'a pas été trouvée dans la base de données.", 
+                                "Avertissement", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // La ligne a été ajoutée mais il y a eu une erreur avec le mouvement de stock
+                        MessageBox.Show($"Ligne ajoutée mais erreur lors de la mise à jour du stock: {ex.Message}\n{ex.InnerException?.Message}", 
+                            "Avertissement", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'ajout de la ligne: {ex.Message}", 
+                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         
