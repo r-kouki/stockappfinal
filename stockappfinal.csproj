@@ -9,6 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Krypton.Docking" Version="95.25.4.111" />
+    <PackageReference Include="Krypton.Navigator" Version="95.25.4.111" />
+    <PackageReference Include="Krypton.Toolkit" Version="95.25.4.111" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
