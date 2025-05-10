@@ -28,113 +28,148 @@ namespace StockApp.MouvementStockForms
         /// </summary>
         private void InitializeComponent()
         {
-            this.dateLabel = new System.Windows.Forms.Label();
-            this.dateTimePicker = new System.Windows.Forms.DateTimePicker();
-            this.typeLabel = new System.Windows.Forms.Label();
-            this.typeComboBox = new System.Windows.Forms.ComboBox();
-            this.quantiteLabel = new System.Windows.Forms.Label();
-            this.quantiteNumericUpDown = new System.Windows.Forms.NumericUpDown();
-            this.pieceIdLabel = new System.Windows.Forms.Label();
-            this.pieceIdTextBox = new System.Windows.Forms.TextBox();
-            this.factureIdLabel = new System.Windows.Forms.Label();
-            this.factureIdTextBox = new System.Windows.Forms.TextBox();
-            this.saveButton = new System.Windows.Forms.Button();
-            this.cancelButton = new System.Windows.Forms.Button();
-            
-            ((System.ComponentModel.ISupportInitialize)(this.quantiteNumericUpDown)).BeginInit();
-            this.SuspendLayout();
-            
-            // Form setup
-            this.Size = new System.Drawing.Size(400, 300);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.AcceptButton = this.saveButton;
-            this.CancelButton = this.cancelButton;
-            
-            // Labels & Controls setup
-            int labelX = 20;
-            int controlX = 150;
-            int startY = 20;
-            int heightStep = 30;
-            int labelWidth = 120;
-            int controlWidth = 200;
-            int controlHeight = 23;
-            
-            // Date
-            this.dateLabel.Location = new System.Drawing.Point(labelX, startY);
-            this.dateLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.dateLabel.Text = "Date:";
-            this.dateLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.dateTimePicker.Location = new System.Drawing.Point(controlX, startY);
-            this.dateTimePicker.Size = new System.Drawing.Size(controlWidth, controlHeight);
-            this.dateTimePicker.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            
-            // Type
-            this.typeLabel.Location = new System.Drawing.Point(labelX, startY + heightStep);
-            this.typeLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.typeLabel.Text = "Type:";
-            this.typeLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.typeComboBox.Location = new System.Drawing.Point(controlX, startY + heightStep);
-            this.typeComboBox.Size = new System.Drawing.Size(controlWidth, controlHeight);
-            this.typeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            
-            // Quantité
-            this.quantiteLabel.Location = new System.Drawing.Point(labelX, startY + 2 * heightStep);
-            this.quantiteLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.quantiteLabel.Text = "Quantité:";
-            this.quantiteLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.quantiteNumericUpDown.Location = new System.Drawing.Point(controlX, startY + 2 * heightStep);
-            this.quantiteNumericUpDown.Size = new System.Drawing.Size(controlWidth, controlHeight);
-            this.quantiteNumericUpDown.Minimum = -1000;
-            this.quantiteNumericUpDown.Maximum = 1000;
-            
-            // Pièce ID
-            this.pieceIdLabel.Location = new System.Drawing.Point(labelX, startY + 3 * heightStep);
-            this.pieceIdLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.pieceIdLabel.Text = "Pièce ID:";
-            this.pieceIdLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.pieceIdTextBox.Location = new System.Drawing.Point(controlX, startY + 3 * heightStep);
-            this.pieceIdTextBox.Size = new System.Drawing.Size(controlWidth, controlHeight);
-            
-            // Facture ID
-            this.factureIdLabel.Location = new System.Drawing.Point(labelX, startY + 4 * heightStep);
-            this.factureIdLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.factureIdLabel.Text = "Facture ID:";
-            this.factureIdLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.factureIdTextBox.Location = new System.Drawing.Point(controlX, startY + 4 * heightStep);
-            this.factureIdTextBox.Size = new System.Drawing.Size(controlWidth, controlHeight);
-            
-            // Buttons
-            this.saveButton.Location = new System.Drawing.Point(100, startY + 6 * heightStep);
-            this.saveButton.Size = new System.Drawing.Size(100, 30);
-            this.saveButton.Text = "Sauvegarder";
-            this.saveButton.Click += new System.EventHandler(this.SaveButton_Click);
-            
-            this.cancelButton.Location = new System.Drawing.Point(210, startY + 6 * heightStep);
-            this.cancelButton.Size = new System.Drawing.Size(100, 30);
-            this.cancelButton.Text = "Annuler";
-            this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
-            
-            // Add controls to form
-            this.Controls.AddRange(new System.Windows.Forms.Control[] {
-                this.dateLabel, this.dateTimePicker,
-                this.typeLabel, this.typeComboBox,
-                this.quantiteLabel, this.quantiteNumericUpDown,
-                this.pieceIdLabel, this.pieceIdTextBox,
-                this.factureIdLabel, this.factureIdTextBox,
-                this.saveButton, this.cancelButton
-            });
-            
-            ((System.ComponentModel.ISupportInitialize)(this.quantiteNumericUpDown)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            dateLabel = new Label();
+            dateTimePicker = new DateTimePicker();
+            typeLabel = new Label();
+            typeComboBox = new ComboBox();
+            quantiteLabel = new Label();
+            quantiteNumericUpDown = new NumericUpDown();
+            pieceIdLabel = new Label();
+            pieceIdTextBox = new TextBox();
+            factureIdLabel = new Label();
+            factureIdTextBox = new TextBox();
+            saveButton = new Button();
+            cancelButton = new Button();
+            ((System.ComponentModel.ISupportInitialize)quantiteNumericUpDown).BeginInit();
+            SuspendLayout();
+            // 
+            // dateLabel
+            // 
+            dateLabel.Location = new Point(20, 14);
+            dateLabel.Name = "dateLabel";
+            dateLabel.Size = new Size(120, 23);
+            dateLabel.TabIndex = 0;
+            dateLabel.Text = "Date:";
+            dateLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // dateTimePicker
+            // 
+            dateTimePicker.Format = DateTimePickerFormat.Short;
+            dateTimePicker.Location = new Point(146, 12);
+            dateTimePicker.Name = "dateTimePicker";
+            dateTimePicker.Size = new Size(200, 23);
+            dateTimePicker.TabIndex = 1;
+            // 
+            // typeLabel
+            // 
+            typeLabel.Location = new Point(20, 43);
+            typeLabel.Name = "typeLabel";
+            typeLabel.Size = new Size(120, 23);
+            typeLabel.TabIndex = 2;
+            typeLabel.Text = "Type:";
+            typeLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // typeComboBox
+            // 
+            typeComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            typeComboBox.Location = new Point(146, 44);
+            typeComboBox.Name = "typeComboBox";
+            typeComboBox.Size = new Size(200, 23);
+            typeComboBox.TabIndex = 3;
+            // 
+            // quantiteLabel
+            // 
+            quantiteLabel.Location = new Point(24, 73);
+            quantiteLabel.Name = "quantiteLabel";
+            quantiteLabel.Size = new Size(120, 23);
+            quantiteLabel.TabIndex = 4;
+            quantiteLabel.Text = "Quantité:";
+            quantiteLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // quantiteNumericUpDown
+            // 
+            quantiteNumericUpDown.Location = new Point(146, 73);
+            quantiteNumericUpDown.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            quantiteNumericUpDown.Minimum = new decimal(new int[] { 1000, 0, 0, int.MinValue });
+            quantiteNumericUpDown.Name = "quantiteNumericUpDown";
+            quantiteNumericUpDown.Size = new Size(200, 23);
+            quantiteNumericUpDown.TabIndex = 5;
+            // 
+            // pieceIdLabel
+            // 
+            pieceIdLabel.Location = new Point(20, 102);
+            pieceIdLabel.Name = "pieceIdLabel";
+            pieceIdLabel.Size = new Size(120, 23);
+            pieceIdLabel.TabIndex = 6;
+            pieceIdLabel.Text = "Pièce ID:";
+            pieceIdLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // pieceIdTextBox
+            // 
+            pieceIdTextBox.Location = new Point(146, 103);
+            pieceIdTextBox.Name = "pieceIdTextBox";
+            pieceIdTextBox.Size = new Size(200, 23);
+            pieceIdTextBox.TabIndex = 7;
+            // 
+            // factureIdLabel
+            // 
+            factureIdLabel.Location = new Point(24, 132);
+            factureIdLabel.Name = "factureIdLabel";
+            factureIdLabel.Size = new Size(120, 23);
+            factureIdLabel.TabIndex = 8;
+            factureIdLabel.Text = "Facture ID:";
+            factureIdLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // factureIdTextBox
+            // 
+            factureIdTextBox.Location = new Point(146, 133);
+            factureIdTextBox.Name = "factureIdTextBox";
+            factureIdTextBox.Size = new Size(200, 23);
+            factureIdTextBox.TabIndex = 9;
+            // 
+            // saveButton
+            // 
+            saveButton.Location = new Point(98, 183);
+            saveButton.Name = "saveButton";
+            saveButton.Size = new Size(100, 30);
+            saveButton.TabIndex = 10;
+            saveButton.Text = "Sauvegarder";
+            saveButton.Click += SaveButton_Click;
+            // 
+            // cancelButton
+            // 
+            cancelButton.Location = new Point(214, 183);
+            cancelButton.Name = "cancelButton";
+            cancelButton.Size = new Size(100, 30);
+            cancelButton.TabIndex = 11;
+            cancelButton.Text = "Annuler";
+            cancelButton.Click += CancelButton_Click;
+            // 
+            // MouvementStockDetailsForm
+            // 
+            AcceptButton = saveButton;
+            CancelButton = cancelButton;
+            ClientSize = new Size(384, 227);
+            Controls.Add(dateLabel);
+            Controls.Add(dateTimePicker);
+            Controls.Add(typeLabel);
+            Controls.Add(typeComboBox);
+            Controls.Add(quantiteLabel);
+            Controls.Add(quantiteNumericUpDown);
+            Controls.Add(pieceIdLabel);
+            Controls.Add(pieceIdTextBox);
+            Controls.Add(factureIdLabel);
+            Controls.Add(factureIdTextBox);
+            Controls.Add(saveButton);
+            Controls.Add(cancelButton);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "MouvementStockDetailsForm";
+            StartPosition = FormStartPosition.CenterParent;
+            ((System.ComponentModel.ISupportInitialize)quantiteNumericUpDown).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion

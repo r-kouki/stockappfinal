@@ -28,126 +28,150 @@ namespace StockApp.FactureForms
         /// </summary>
         private void InitializeComponent()
         {
-            this.pieceLabel = new System.Windows.Forms.Label();
-            this.pieceComboBox = new System.Windows.Forms.ComboBox();
-            this.quantiteLabel = new System.Windows.Forms.Label();
-            this.quantiteNumericUpDown = new System.Windows.Forms.NumericUpDown();
-            this.prixUnitaireLabel = new System.Windows.Forms.Label();
-            this.prixUnitaireNumericUpDown = new System.Windows.Forms.NumericUpDown();
-            this.remiseLabel = new System.Windows.Forms.Label();
-            this.remiseNumericUpDown = new System.Windows.Forms.NumericUpDown();
-            this.totalLabel = new System.Windows.Forms.Label();
-            this.saveButton = new System.Windows.Forms.Button();
-            this.cancelButton = new System.Windows.Forms.Button();
-            
-            ((System.ComponentModel.ISupportInitialize)(this.quantiteNumericUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.prixUnitaireNumericUpDown)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.remiseNumericUpDown)).BeginInit();
-            this.SuspendLayout();
-            
-            // Form setup
-            this.Size = new System.Drawing.Size(450, 250);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.AcceptButton = this.saveButton;
-            this.CancelButton = this.cancelButton;
-            
-            // Labels & Controls setup
-            int labelX = 20;
-            int controlX = 150;
-            int startY = 20;
-            int heightStep = 30;
-            int labelWidth = 120;
-            int controlWidth = 250;
-            int controlHeight = 23;
-            
-            // Pièce
-            this.pieceLabel.Location = new System.Drawing.Point(labelX, startY);
-            this.pieceLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.pieceLabel.Text = "Pièce:";
-            this.pieceLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.pieceComboBox.Location = new System.Drawing.Point(controlX, startY);
-            this.pieceComboBox.Size = new System.Drawing.Size(controlWidth, controlHeight);
-            this.pieceComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.pieceComboBox.SelectedIndexChanged += new System.EventHandler(this.PieceComboBox_SelectedIndexChanged);
-            
-            // Quantité
-            this.quantiteLabel.Location = new System.Drawing.Point(labelX, startY + heightStep);
-            this.quantiteLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.quantiteLabel.Text = "Quantité:";
-            this.quantiteLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.quantiteNumericUpDown.Location = new System.Drawing.Point(controlX, startY + heightStep);
-            this.quantiteNumericUpDown.Size = new System.Drawing.Size(100, controlHeight);
-            this.quantiteNumericUpDown.Minimum = 1;
-            this.quantiteNumericUpDown.Maximum = 1000;
-            this.quantiteNumericUpDown.Value = 1;
-            this.quantiteNumericUpDown.ValueChanged += new System.EventHandler(this.QuantiteNumericUpDown_ValueChanged);
-            
-            // Prix unitaire
-            this.prixUnitaireLabel.Location = new System.Drawing.Point(labelX, startY + 2 * heightStep);
-            this.prixUnitaireLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.prixUnitaireLabel.Text = "Prix unitaire HT:";
-            this.prixUnitaireLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.prixUnitaireNumericUpDown.Location = new System.Drawing.Point(controlX, startY + 2 * heightStep);
-            this.prixUnitaireNumericUpDown.Size = new System.Drawing.Size(120, controlHeight);
-            this.prixUnitaireNumericUpDown.DecimalPlaces = 2;
-            this.prixUnitaireNumericUpDown.Minimum = 0;
-            this.prixUnitaireNumericUpDown.Maximum = 10000;
-            this.prixUnitaireNumericUpDown.Increment = 0.1M;
-            this.prixUnitaireNumericUpDown.Value = 0;
-            this.prixUnitaireNumericUpDown.ValueChanged += new System.EventHandler(this.PrixUnitaireNumericUpDown_ValueChanged);
-            
-            // Remise
-            this.remiseLabel.Location = new System.Drawing.Point(labelX, startY + 3 * heightStep);
-            this.remiseLabel.Size = new System.Drawing.Size(labelWidth, controlHeight);
-            this.remiseLabel.Text = "Remise (%):";
-            this.remiseLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            
-            this.remiseNumericUpDown.Location = new System.Drawing.Point(controlX, startY + 3 * heightStep);
-            this.remiseNumericUpDown.Size = new System.Drawing.Size(80, controlHeight);
-            this.remiseNumericUpDown.DecimalPlaces = 1;
-            this.remiseNumericUpDown.Minimum = 0;
-            this.remiseNumericUpDown.Maximum = 100;
-            this.remiseNumericUpDown.Value = 0;
-            this.remiseNumericUpDown.ValueChanged += new System.EventHandler(this.RemiseNumericUpDown_ValueChanged);
-            
-            // Total
-            this.totalLabel.Location = new System.Drawing.Point(labelX, startY + 4 * heightStep);
-            this.totalLabel.Size = new System.Drawing.Size(controlWidth + labelWidth, controlHeight);
-            this.totalLabel.Text = "Total: 0.00 €";
-            this.totalLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold);
-            
-            // Buttons
-            this.saveButton.Location = new System.Drawing.Point(150, startY + 5 * heightStep + 10);
-            this.saveButton.Size = new System.Drawing.Size(100, 30);
-            this.saveButton.Text = "Ajouter";
-            this.saveButton.Click += new System.EventHandler(this.SaveButton_Click);
-            
-            this.cancelButton.Location = new System.Drawing.Point(260, startY + 5 * heightStep + 10);
-            this.cancelButton.Size = new System.Drawing.Size(100, 30);
-            this.cancelButton.Text = "Annuler";
-            this.cancelButton.Click += new System.EventHandler(this.CancelButton_Click);
-            
-            // Add controls to form
-            this.Controls.AddRange(new System.Windows.Forms.Control[] {
-                this.pieceLabel, this.pieceComboBox,
-                this.quantiteLabel, this.quantiteNumericUpDown,
-                this.prixUnitaireLabel, this.prixUnitaireNumericUpDown,
-                this.remiseLabel, this.remiseNumericUpDown,
-                this.totalLabel,
-                this.saveButton, this.cancelButton
-            });
-            
-            ((System.ComponentModel.ISupportInitialize)(this.quantiteNumericUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.prixUnitaireNumericUpDown)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.remiseNumericUpDown)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            pieceLabel = new Label();
+            pieceComboBox = new ComboBox();
+            quantiteLabel = new Label();
+            quantiteNumericUpDown = new NumericUpDown();
+            prixUnitaireLabel = new Label();
+            prixUnitaireNumericUpDown = new NumericUpDown();
+            remiseLabel = new Label();
+            remiseNumericUpDown = new NumericUpDown();
+            totalLabel = new Label();
+            saveButton = new Button();
+            cancelButton = new Button();
+            ((System.ComponentModel.ISupportInitialize)quantiteNumericUpDown).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)prixUnitaireNumericUpDown).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)remiseNumericUpDown).BeginInit();
+            SuspendLayout();
+            // 
+            // pieceLabel
+            // 
+            pieceLabel.Location = new Point(20, 23);
+            pieceLabel.Name = "pieceLabel";
+            pieceLabel.Size = new Size(120, 23);
+            pieceLabel.TabIndex = 0;
+            pieceLabel.Text = "Pièce:";
+            pieceLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // pieceComboBox
+            // 
+            pieceComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            pieceComboBox.Location = new Point(150, 23);
+            pieceComboBox.Name = "pieceComboBox";
+            pieceComboBox.Size = new Size(250, 23);
+            pieceComboBox.TabIndex = 1;
+            pieceComboBox.SelectedIndexChanged += PieceComboBox_SelectedIndexChanged;
+            // 
+            // quantiteLabel
+            // 
+            quantiteLabel.Location = new Point(20, 50);
+            quantiteLabel.Name = "quantiteLabel";
+            quantiteLabel.Size = new Size(120, 23);
+            quantiteLabel.TabIndex = 2;
+            quantiteLabel.Text = "Quantité:";
+            quantiteLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // quantiteNumericUpDown
+            // 
+            quantiteNumericUpDown.Location = new Point(150, 52);
+            quantiteNumericUpDown.Maximum = new decimal(new int[] { 1000, 0, 0, 0 });
+            quantiteNumericUpDown.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            quantiteNumericUpDown.Name = "quantiteNumericUpDown";
+            quantiteNumericUpDown.Size = new Size(100, 23);
+            quantiteNumericUpDown.TabIndex = 3;
+            quantiteNumericUpDown.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            quantiteNumericUpDown.ValueChanged += QuantiteNumericUpDown_ValueChanged;
+            // 
+            // prixUnitaireLabel
+            // 
+            prixUnitaireLabel.Location = new Point(24, 79);
+            prixUnitaireLabel.Name = "prixUnitaireLabel";
+            prixUnitaireLabel.Size = new Size(120, 23);
+            prixUnitaireLabel.TabIndex = 4;
+            prixUnitaireLabel.Text = "Prix unitaire HT:";
+            prixUnitaireLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // prixUnitaireNumericUpDown
+            // 
+            prixUnitaireNumericUpDown.DecimalPlaces = 2;
+            prixUnitaireNumericUpDown.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
+            prixUnitaireNumericUpDown.Location = new Point(150, 81);
+            prixUnitaireNumericUpDown.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
+            prixUnitaireNumericUpDown.Name = "prixUnitaireNumericUpDown";
+            prixUnitaireNumericUpDown.Size = new Size(120, 23);
+            prixUnitaireNumericUpDown.TabIndex = 5;
+            prixUnitaireNumericUpDown.ValueChanged += PrixUnitaireNumericUpDown_ValueChanged;
+            // 
+            // remiseLabel
+            // 
+            remiseLabel.Location = new Point(20, 110);
+            remiseLabel.Name = "remiseLabel";
+            remiseLabel.Size = new Size(120, 23);
+            remiseLabel.TabIndex = 6;
+            remiseLabel.Text = "Remise (%):";
+            remiseLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // remiseNumericUpDown
+            // 
+            remiseNumericUpDown.DecimalPlaces = 1;
+            remiseNumericUpDown.Location = new Point(150, 110);
+            remiseNumericUpDown.Name = "remiseNumericUpDown";
+            remiseNumericUpDown.Size = new Size(80, 23);
+            remiseNumericUpDown.TabIndex = 7;
+            remiseNumericUpDown.ValueChanged += RemiseNumericUpDown_ValueChanged;
+            // 
+            // totalLabel
+            // 
+            totalLabel.Font = new Font("Microsoft Sans Serif", 8.25F, FontStyle.Bold);
+            totalLabel.Location = new Point(20, 143);
+            totalLabel.Name = "totalLabel";
+            totalLabel.Size = new Size(250, 23);
+            totalLabel.TabIndex = 8;
+            totalLabel.Text = "Total: 0.00 €";
+            // 
+            // saveButton
+            // 
+            saveButton.Location = new Point(150, 169);
+            saveButton.Name = "saveButton";
+            saveButton.Size = new Size(100, 30);
+            saveButton.TabIndex = 9;
+            saveButton.Text = "Ajouter";
+            saveButton.Click += SaveButton_Click;
+            // 
+            // cancelButton
+            // 
+            cancelButton.Location = new Point(256, 169);
+            cancelButton.Name = "cancelButton";
+            cancelButton.Size = new Size(100, 30);
+            cancelButton.TabIndex = 10;
+            cancelButton.Text = "Annuler";
+            cancelButton.Click += CancelButton_Click;
+            // 
+            // LigneFactureForm
+            // 
+            AcceptButton = saveButton;
+            CancelButton = cancelButton;
+            ClientSize = new Size(434, 211);
+            Controls.Add(pieceLabel);
+            Controls.Add(pieceComboBox);
+            Controls.Add(quantiteLabel);
+            Controls.Add(quantiteNumericUpDown);
+            Controls.Add(prixUnitaireLabel);
+            Controls.Add(prixUnitaireNumericUpDown);
+            Controls.Add(remiseLabel);
+            Controls.Add(remiseNumericUpDown);
+            Controls.Add(totalLabel);
+            Controls.Add(saveButton);
+            Controls.Add(cancelButton);
+            FormBorderStyle = FormBorderStyle.FixedDialog;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "LigneFactureForm";
+            StartPosition = FormStartPosition.CenterParent;
+            ((System.ComponentModel.ISupportInitialize)quantiteNumericUpDown).EndInit();
+            ((System.ComponentModel.ISupportInitialize)prixUnitaireNumericUpDown).EndInit();
+            ((System.ComponentModel.ISupportInitialize)remiseNumericUpDown).EndInit();
+            ResumeLayout(false);
         }
 
         #endregion
