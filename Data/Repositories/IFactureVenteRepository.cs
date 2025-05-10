@@ -7,7 +7,7 @@ namespace StockApp.Data.Repositories
 {
     public interface IFactureVenteRepository : IRepository<FactureVente>
     {
-        Task<FactureVente> GetWithDetailsAsync(Guid id);
+        Task<FactureVente> GetWithDetailsAsync(string id);
         Task<IEnumerable<FactureVente>> GetAllWithDetailsAsync();
     }
 } 

@@ -54,7 +54,7 @@ namespace StockApp
             var services = new ServiceCollection();
 
             // Add data services using the fixed DB path
-            services.AddStockData($"Data Source={DbPath}");
+            services.RegisterDataServices($"Data Source={DbPath}");
 
             // Register Forms
             services.AddTransient<LoginForm>();

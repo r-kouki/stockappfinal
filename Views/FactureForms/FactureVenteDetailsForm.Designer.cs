@@ -37,6 +37,8 @@ namespace StockApp.FactureForms
             addLigneButton = new Button();
             saveButton = new Button();
             cancelButton = new Button();
+            dateEcheanceLabel = new Label();
+            dateEcheanceTimePicker = new DateTimePicker();
             lignesGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)lignesDataGridView).BeginInit();
             SuspendLayout();
@@ -75,11 +77,28 @@ namespace StockApp.FactureForms
             clientComboBox.Size = new Size(200, 28);
             clientComboBox.TabIndex = 3;
             // 
+            // dateEcheanceLabel
+            // 
+            dateEcheanceLabel.Location = new Point(61, 75);
+            dateEcheanceLabel.Name = "dateEcheanceLabel";
+            dateEcheanceLabel.Size = new Size(120, 23);
+            dateEcheanceLabel.TabIndex = 7;
+            dateEcheanceLabel.Text = "Date d'échéance:";
+            dateEcheanceLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
+            // dateEcheanceTimePicker
+            // 
+            dateEcheanceTimePicker.Format = DateTimePickerFormat.Short;
+            dateEcheanceTimePicker.Location = new Point(200, 75);
+            dateEcheanceTimePicker.Name = "dateEcheanceTimePicker";
+            dateEcheanceTimePicker.Size = new Size(200, 27);
+            dateEcheanceTimePicker.TabIndex = 8;
+            // 
             // lignesGroupBox
             // 
             lignesGroupBox.Controls.Add(lignesDataGridView);
             lignesGroupBox.Controls.Add(addLigneButton);
-            lignesGroupBox.Location = new Point(20, 77);
+            lignesGroupBox.Location = new Point(20, 105);
             lignesGroupBox.Name = "lignesGroupBox";
             lignesGroupBox.Size = new Size(550, 280);
             lignesGroupBox.TabIndex = 4;
@@ -137,6 +156,8 @@ namespace StockApp.FactureForms
             Controls.Add(clientLabel);
             Controls.Add(clientComboBox);
             Controls.Add(dateTimePicker);
+            Controls.Add(dateEcheanceLabel);
+            Controls.Add(dateEcheanceTimePicker);
             Controls.Add(lignesGroupBox);
             Controls.Add(saveButton);
             Controls.Add(cancelButton);
@@ -161,5 +182,7 @@ namespace StockApp.FactureForms
         private System.Windows.Forms.Button addLigneButton;
         private System.Windows.Forms.Button saveButton;
         private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.Label dateEcheanceLabel;
+        private System.Windows.Forms.DateTimePicker dateEcheanceTimePicker;
     }
 } 

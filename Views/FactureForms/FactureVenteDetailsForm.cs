@@ -28,7 +28,12 @@ namespace StockApp.FactureForms
             _mouvementStockRepository = Program.ServiceProvider.GetRequiredService<IMouvementStockRepository>();
             _pieceRepository = Program.ServiceProvider.GetRequiredService<IPieceRepository>();
             
-            _facture = facture ?? new FactureVente { Id = Guid.NewGuid(), Date = DateTime.Now, LignesFacture = new List<LigneFacture>() };
+            _facture = facture ?? new FactureVente { 
+                Id = string.Empty, 
+                Date = DateTime.Now, 
+                DateEcheance = DateTime.Now.AddDays(30), 
+                LignesFacture = new List<LigneFacture>() 
+            };
             _isNewFacture = facture == null;
             
             // Configuration du titre du formulaire
@@ -41,6 +46,17 @@ namespace StockApp.FactureForms
             if (!_isNewFacture)
             {
                 this.dateTimePicker.Value = _facture.Date;
+                
+                // Set DateEcheance if it has a value
+                if (_facture.DateEcheance.HasValue)
+                {
+                    this.dateEcheanceTimePicker.Value = _facture.DateEcheance.Value;
+                }
+                else
+                {
+                    // Default to 30 days from invoice date
+                    this.dateEcheanceTimePicker.Value = _facture.Date.AddDays(30);
+                }
                 
                 // La sélection du client sera faite après le chargement des données
                 
@@ -112,15 +128,43 @@ namespace StockApp.FactureForms
             
             try
             {
-                // Mettre à jour l'objet facture avec les valeurs du formulaire
-                _facture.Date = dateTimePicker.Value;
+                // Créer une nouvelle instance de facture plutôt que de modifier l'existante
+                // Cette approche évite les problèmes de suivi d'entité
+                var newFacture = new FactureVente
+                {
+                    Id = _facture.Id,
+                    Date = dateTimePicker.Value,
+                    DateEcheance = dateEcheanceTimePicker.Value,
+                    MontantPaye = _facture.MontantPaye,
+                    Note = _facture.Note,
+                    NumeroFactureClient = _facture.NumeroFactureClient
+                };
                 
-                // Récupérer l'ID du client sélectionné
+                // Récupérer l'ID du client sélectionné, mais ne pas stocker la référence à l'objet Client
                 if (clientComboBox.SelectedItem is Client selectedClient)
                 {
-                    _facture.ClientId = selectedClient.Id;
-                    _facture.Client = selectedClient;
+                    newFacture.ClientId = selectedClient.Id;
                 }
+                
+                // Créer des copies des lignes de facture pour éviter les problèmes de suivi d'entité
+                newFacture.LignesFacture = new List<LigneFacture>();
+                foreach (var ligne in _facture.LignesFacture)
+                {
+                    var newLigne = new LigneFacture
+                    {
+                        Id = ligne.Id,
+                        Quantite = ligne.Quantite,
+                        PrixUnitaireHT = ligne.PrixUnitaireHT,
+                        RemisePct = ligne.RemisePct,
+                        PieceId = ligne.PieceId,
+                        FactureId = newFacture.Id
+                    };
+                    
+                    newFacture.LignesFacture.Add(newLigne);
+                }
+                
+                // Remplacer la facture actuelle par la nouvelle
+                _facture = newFacture;
                 
                 // Définir le DialogResult pour indiquer le succès
                 this.DialogResult = DialogResult.OK;
@@ -149,7 +193,7 @@ namespace StockApp.FactureForms
                 if (ligneForm.ShowDialog() == DialogResult.OK)
                 {
                     // Vérifier que la pièce existe
-                    if (ligneForm.LigneFacture == null || ligneForm.LigneFacture.PieceId == Guid.Empty)
+                    if (ligneForm.LigneFacture == null || string.IsNullOrEmpty(ligneForm.LigneFacture.PieceId))
                     {
                         MessageBox.Show("Données de ligne invalides.", "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
@@ -173,62 +217,35 @@ namespace StockApp.FactureForms
                             return;
                         }
                         
+                        // Créer une nouvelle ligne plutôt que d'utiliser directement celle du formulaire
+                        // Cette approche évite les problèmes de suivi d'entité
+                        var nouvelleLigne = new LigneFacture
+                        {
+                            Id = string.Empty, // L'ID sera généré par le repository
+                            PieceId = ligneForm.LigneFacture.PieceId,
+                            Quantite = ligneForm.LigneFacture.Quantite,
+                            PrixUnitaireHT = ligneForm.LigneFacture.PrixUnitaireHT,
+                            RemisePct = ligneForm.LigneFacture.RemisePct,
+                            FactureId = _facture.Id
+                        };
+                        
                         // Ajouter la ligne à la facture
                         if (_facture.LignesFacture == null)
                         {
                             _facture.LignesFacture = new List<LigneFacture>();
                         }
                         
-                        _facture.LignesFacture.Add(ligneForm.LigneFacture);
-                        
-                        // Lier la ligne à cette facture
-                        ligneForm.LigneFacture.FactureId = _facture.Id;
-                        ligneForm.LigneFacture.Facture = _facture;
+                        _facture.LignesFacture.Add(nouvelleLigne);
                         
                         // Rafraîchir la grille des lignes
                         RefreshLignesFactureGrid();
                         
-                        try
-                        {
-                            // Créer un mouvement de stock (sortie) associé
-                            var mouvement = new MouvementStock
-                            {
-                                Id = Guid.NewGuid(),
-                                Date = DateTime.Now,
-                                Type = "SORTIE",
-                                Quantite = ligneForm.LigneFacture.Quantite,
-                                PieceId = ligneForm.LigneFacture.PieceId,
-                                FactureId = _facture.Id
-                            };
-                            
-                            // Enregistrer le mouvement dans la base de données
-                            await _mouvementStockRepository.AddAsync(mouvement);
-                            
-                            // Mettre à jour le stock de la pièce
-                            int nouvelleQuantite = piece.Stock - ligneForm.LigneFacture.Quantite;
-                            
-                            // Utiliser une approche différente pour mettre à jour le stock
-                            // En créant un contexte séparé pour cette opération
-                            using (var scope = Program.ServiceProvider.CreateScope())
-                            {
-                                var stockContext = scope.ServiceProvider.GetRequiredService<StockContext>();
-                                var pieceToUpdate = await stockContext.Pieces.FindAsync(piece.Id);
-                                if (pieceToUpdate != null)
-                                {
-                                    pieceToUpdate.Stock = nouvelleQuantite;
-                                    await stockContext.SaveChangesAsync();
-                                }
-                            }
-                            
-                            MessageBox.Show($"Ligne ajoutée et stock mis à jour (-{ligneForm.LigneFacture.Quantite})", 
-                                "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        catch (Exception ex)
-                        {
-                            // La ligne a été ajoutée mais il y a eu une erreur avec le mouvement de stock
-                            MessageBox.Show($"Ligne ajoutée mais erreur lors de la mise à jour du stock: {ex.Message}", 
-                                "Avertissement", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        }
+                        // Mettre en place une architecture évitant la mise à jour directe du stock dans le formulaire
+                        // On laissera le repository s'occuper de la mise à jour du stock lors de l'ajout de la facture
+                        
+                        // Message de succès
+                        MessageBox.Show($"Ligne ajoutée avec succès", 
+                            "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {

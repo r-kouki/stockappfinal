@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace StockApp.Data
 {
@@ -56,7 +57,7 @@ namespace StockApp.Data
                     {
                         context.Users.Add(new Entities.User
                         {
-                            Id = Guid.NewGuid(),
+                            Id = "25UR000001", // Use the new ID format
                             Username = "admin",
                             Password = "admin",
                             PasswordHash = "admin",
@@ -81,6 +82,86 @@ namespace StockApp.Data
             {
                 MessageBox.Show($"Database error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        public static IServiceCollection RegisterDataServices(this IServiceCollection services, string connectionString)
+        {
+            // Store the connection string for later use
+            DbConnectionString = connectionString;
+            
+            // Register database context
+            services.AddDbContext<StockContext>(options =>
+                options.UseSqlite(connectionString)
+                    .EnableSensitiveDataLogging()
+                    .EnableDetailedErrors()
+            );
+
+            // Register repositories
+            services.AddScoped<IClientRepository, ClientRepository>();
+            services.AddScoped<IFournisseurRepository, FournisseurRepository>();
+            services.AddScoped<IPieceRepository, PieceRepository>();
+            services.AddScoped<IFactureAchatRepository, FactureAchatRepository>();
+            services.AddScoped<IFactureVenteRepository, FactureVenteRepository>();
+            services.AddScoped<IMouvementStockRepository, MouvementStockRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            
+            // Register ID generation service
+            services.AddSingleton<IIdGeneratorService, IdGeneratorService>();
+
+            return services;
+        }
+    }
+
+    // ID Generation service interfaces and implementation
+    public interface IIdGeneratorService
+    {
+        string GenerateId(string entityType);
+    }
+
+    public class IdGeneratorService : IIdGeneratorService
+    {
+        private readonly object _lock = new();
+        private readonly Dictionary<string, int> _counters = new();
+
+        public string GenerateId(string entityType)
+        {
+            lock (_lock)
+            {
+                string prefix = GetYearPrefix();
+                string typeCode = GetEntityTypeCode(entityType);
+                
+                if (!_counters.TryGetValue(entityType, out int counter))
+                {
+                    counter = 1;
+                    _counters[entityType] = counter;
+                }
+                else
+                {
+                    counter++;
+                    _counters[entityType] = counter;
+                }
+                
+                return $"{prefix}{typeCode}{counter:D6}";
+            }
+        }
+
+        private static string GetYearPrefix()
+        {
+            return DateTime.Now.ToString("yy"); // Last two digits of current year
+        }
+
+        private static string GetEntityTypeCode(string entityType)
+        {
+            return entityType.ToUpper() switch
+            {
+                "CLIENT" => "CL",
+                "FOURNISSEUR" => "FR",
+                "PIECE" => "PC",
+                "FACTUREACHAT" => "FA",
+                "FACTUREVENTE" => "FV",
+                "USER" => "UR",
+                _ => "XX" // Default/unknown type
+            };
         }
     }
 } 

@@ -5,7 +5,7 @@ namespace StockApp.Data.Entities
 {
     public class Client
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         public string Nom { get; set; } = string.Empty;
         public string Prenom { get; set; } = string.Empty;
         public string MatFiscal { get; set; } = string.Empty;

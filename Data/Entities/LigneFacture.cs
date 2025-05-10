@@ -4,15 +4,19 @@ namespace StockApp.Data.Entities
 {
     public class LigneFacture
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         public int Quantite { get; set; }
         public decimal PrixUnitaireHT { get; set; }
         public decimal RemisePct { get; set; }
 
-        public Guid PieceId { get; set; } // Foreign Key
-        public Piece? Piece { get; set; } // Navigation Property
+        public string FactureId { get; set; } = string.Empty;
+        public Facture? Facture { get; set; }
 
-        public Guid FactureId { get; set; } // Foreign Key
-        public Facture? Facture { get; set; } // Navigation Property
+        public string PieceId { get; set; } = string.Empty;
+        public Piece? Piece { get; set; }
+        
+        // Calculated properties
+        public decimal TotalLigneHT() => Quantite * PrixUnitaireHT * (1 - RemisePct / 100);
+        public decimal TotalLigneTTC() => TotalLigneHT() * (1 + (Piece?.TvaPct ?? 0) / 100);
     }
 } 

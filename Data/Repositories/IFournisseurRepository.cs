@@ -6,6 +6,6 @@ namespace StockApp.Data.Repositories
 {
     public interface IFournisseurRepository : IRepository<Fournisseur>
     {
-        Task<Fournisseur> GetWithFacturesAsync(Guid id);
+        Task<Fournisseur> GetWithFacturesAsync(string id);
     }
 } 

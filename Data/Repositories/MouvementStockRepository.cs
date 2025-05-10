@@ -9,7 +9,8 @@ namespace StockApp.Data.Repositories
 {
     public class MouvementStockRepository : Repository<MouvementStock>, IMouvementStockRepository
     {
-        public MouvementStockRepository(StockContext context) : base(context)
+        public MouvementStockRepository(StockContext context, IIdGeneratorService idGenerator) 
+            : base(context, idGenerator)
         {
         }
 
@@ -20,11 +21,19 @@ namespace StockApp.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<MouvementStock>> GetByPieceAsync(Guid pieceId)
+        public async Task<IEnumerable<MouvementStock>> GetByPieceIdAsync(string pieceId)
         {
             return await _context.MouvementsStock
                 .Where(m => m.PieceId == pieceId)
-                .Include(m => m.Piece)
+                .OrderByDescending(m => m.Date)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<MouvementStock>> GetByFactureIdAsync(string factureId)
+        {
+            return await _context.MouvementsStock
+                .Where(m => m.FactureId == factureId)
+                .OrderByDescending(m => m.Date)
                 .ToListAsync();
         }
     }

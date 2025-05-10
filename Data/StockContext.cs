@@ -6,9 +6,15 @@ namespace StockApp.Data
 {
     public class StockContext : DbContext
     {
-        public StockContext(DbContextOptions<StockContext> options) : base(options)
+        private readonly IIdGeneratorService _idGenerator;
+
+        public StockContext(DbContextOptions<StockContext> options, IIdGeneratorService idGenerator = null) 
+            : base(options)
         {
-            // Enable detailed errors
+            _idGenerator = idGenerator;
+            
+            // Only create the database if it doesn't exist yet
+            // Database.EnsureDeleted(); // Removed to preserve data
             Database.EnsureCreated();
         }
 
@@ -50,11 +56,21 @@ namespace StockApp.Data
                 .HasOne(fa => fa.Fournisseur)
                 .WithMany(f => f.FacturesAchat)
                 .HasForeignKey(fa => fa.FournisseurId);
+                
+            // Configure DateEcheance column for FactureAchat
+            modelBuilder.Entity<FactureAchat>()
+                .Property(fa => fa.DateEcheance)
+                .HasColumnName("DateEcheance");
 
             modelBuilder.Entity<FactureVente>()
                 .HasOne(fv => fv.Client)
                 .WithMany(c => c.FacturesVente)
                 .HasForeignKey(fv => fv.ClientId);
+                
+            // Configure DateEcheance column for FactureVente
+            modelBuilder.Entity<FactureVente>()
+                .Property(fv => fv.DateEcheance)
+                .HasColumnName("DateEcheance");
 
             modelBuilder.Entity<MouvementStock>()
                 .HasOne(ms => ms.Piece)
@@ -65,7 +81,7 @@ namespace StockApp.Data
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
-                    Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), // Fixed ID to prevent duplicate seeding
+                    Id = "25UR000001", // Using the new ID format
                     Username = "admin",
                     Password = "admin", // In a real app, use password hashing
                     PasswordHash = "admin", // In a real app, use password hashing

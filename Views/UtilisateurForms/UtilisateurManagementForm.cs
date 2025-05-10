@@ -2,35 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using StockApp.Data.Entities;
+using System.Linq;
 
 namespace StockApp.UtilisateurForms
 {
     public partial class UtilisateurManagementForm : UserControl
     {
         // Liste des utilisateurs en mémoire pour démonstration
-        private List<User> users = new List<User>
-        {
-            new User
-            {
-                Id = Guid.NewGuid(),
-                Username = "poly",
-                PasswordHash = "root123",
-                Nom = "Admin",
-                Prenom = "System",
-                Role = Role.ADMIN,
-                Actif = true
-            },
-            new User
-            {
-                Id = Guid.NewGuid(),
-                Username = "user",
-                PasswordHash = "user",
-                Nom = "Utilisateur",
-                Prenom = "Normal",
-                Role = Role.OPERATEUR,
-                Actif = true
-            }
-        };
+        private List<User> users = new List<User>();
         
         public UtilisateurManagementForm()
         {

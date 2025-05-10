@@ -25,7 +25,7 @@ namespace StockApp.FactureForms
                 // Obtenir le repository depuis le conteneur DI
                 _pieceRepository = Program.ServiceProvider.GetRequiredService<IPieceRepository>();
                 
-                _ligneFacture = ligneFacture ?? new LigneFacture { Id = Guid.NewGuid() };
+                _ligneFacture = ligneFacture ?? new LigneFacture { Id = string.Empty };
                 _isNewLigne = ligneFacture == null;
                 
                 // Configuration du titre du formulaire
@@ -183,21 +183,35 @@ namespace StockApp.FactureForms
                 return;
             }
             
-            // Mettre à jour l'objet ligne avec les valeurs du formulaire
-            _ligneFacture.Quantite = (int)quantiteNumericUpDown.Value;
-            _ligneFacture.PrixUnitaireHT = prixUnitaireNumericUpDown.Value;
-            _ligneFacture.RemisePct = remiseNumericUpDown.Value;
-            
-            // Récupérer l'ID de la pièce sélectionnée
-            if (pieceComboBox.SelectedItem is Piece selectedPiece)
+            try
             {
-                _ligneFacture.PieceId = selectedPiece.Id;
-                _ligneFacture.Piece = selectedPiece;
+                // Créer un nouvel objet LigneFacture plutôt que de modifier l'existant
+                // Cette approche évite les problèmes de suivi d'entité
+                _ligneFacture = new LigneFacture
+                {
+                    Id = _isNewLigne ? string.Empty : _ligneFacture.Id, // Conserver l'ID si en édition
+                    Quantite = (int)quantiteNumericUpDown.Value,
+                    PrixUnitaireHT = prixUnitaireNumericUpDown.Value,
+                    RemisePct = remiseNumericUpDown.Value,
+                    FactureId = _ligneFacture.FactureId // Conserver la référence à la facture
+                };
+                
+                // Récupérer seulement l'ID de la pièce sélectionnée sans conserver la référence à l'objet Piece
+                if (pieceComboBox.SelectedItem is Piece selectedPiece)
+                {
+                    _ligneFacture.PieceId = selectedPiece.Id;
+                    // Ne pas stocker la référence à l'objet Piece pour éviter les conflits de tracking
+                }
+                
+                // Définir le DialogResult pour indiquer le succès
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
-            
-            // Définir le DialogResult pour indiquer le succès
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'enregistrement de la ligne: {ex.Message}", 
+                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         private void CancelButton_Click(object sender, EventArgs e)

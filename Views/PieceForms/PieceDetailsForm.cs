@@ -13,7 +13,7 @@ namespace StockApp.PieceForms
         {
             InitializeComponent();
             
-            _piece = piece ?? new Piece { Id = Guid.NewGuid() };
+            _piece = piece ?? new Piece { Id = string.Empty };
             _isNewPiece = piece == null;
             
             // Set the form's title based on whether we're adding or editing

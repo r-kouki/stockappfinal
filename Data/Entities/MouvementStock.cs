@@ -4,15 +4,15 @@ namespace StockApp.Data.Entities
 {
     public class MouvementStock
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         public DateTime Date { get; set; }
         public string Type { get; set; } = string.Empty; // e.g., "ENTREE", "SORTIE"
         public int Quantite { get; set; }
 
-        public Guid PieceId { get; set; } // Foreign Key
+        public string PieceId { get; set; } = string.Empty; // Foreign Key
         public Piece? Piece { get; set; } // Navigation Property
 
-        public Guid? FactureId { get; set; } // Foreign Key (nullable for movements not tied to an invoice)
+        public string? FactureId { get; set; } // Foreign Key (nullable for movements not tied to an invoice)
         public Facture? Facture { get; set; } // Navigation Property
 
         // The note "type peut être ENTREE ou SORTIE" from diagram can be a comment here or enforced by an enum if preferred.

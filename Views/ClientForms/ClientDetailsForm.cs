@@ -13,7 +13,7 @@ namespace StockApp.ClientForms
         {
             InitializeComponent();
             
-            _client = client ?? new Client { Id = Guid.NewGuid() };
+            _client = client ?? new Client { Id = string.Empty };
             _isNewClient = client == null;
             
             // Set the form's title based on whether we're adding or editing

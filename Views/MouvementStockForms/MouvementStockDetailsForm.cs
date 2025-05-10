@@ -7,41 +7,34 @@ namespace StockApp.MouvementStockForms
     public partial class MouvementStockDetailsForm : Form
     {
         private MouvementStock _mouvement;
-        private bool _isNewMouvement;
-
+        
+        public MouvementStock Mouvement => _mouvement;
+        
         public MouvementStockDetailsForm(MouvementStock mouvement = null)
         {
             InitializeComponent();
             
-            _mouvement = mouvement ?? new MouvementStock { Id = Guid.NewGuid(), Date = DateTime.Now, Type = "ENTREE", Quantite = 0 };
-            _isNewMouvement = mouvement == null;
+            // Use the mouvement passed in or create a new one
+            _mouvement = mouvement ?? new MouvementStock { Id = string.Empty, Date = DateTime.Now, Type = "ENTREE", Quantite = 0 };
             
-            // Configuration du titre du formulaire
-            this.Text = _isNewMouvement ? "Ajouter un mouvement de stock" : "Modifier un mouvement de stock";
+            // Set up combobox items
+            typeComboBox.Items.Add("ENTREE");
+            typeComboBox.Items.Add("SORTIE");
             
-            // Remplir le combobox des types
-            typeComboBox.Items.AddRange(new string[] { "ENTREE", "SORTIE", "AJUSTEMENT_INV", "RETOUR_CLIENT", "RETOUR_FOURNISSEUR" });
+            // Bind data to controls
+            dateTimePicker.Value = _mouvement.Date;
+            typeComboBox.SelectedItem = _mouvement.Type;
+            quantiteNumericUpDown.Value = _mouvement.Quantite;
             
-            // Charger les données du mouvement si en mode édition
-            if (!_isNewMouvement)
+            if (_mouvement.PieceId != null)
             {
-                this.dateTimePicker.Value = _mouvement.Date;
-                this.typeComboBox.SelectedItem = _mouvement.Type;
-                this.quantiteNumericUpDown.Value = _mouvement.Quantite;
-                this.pieceIdTextBox.Text = _mouvement.PieceId.ToString();
-                
-                if (_mouvement.FactureId.HasValue)
-                {
-                    this.factureIdTextBox.Text = _mouvement.FactureId.Value.ToString();
-                }
-            }
-            else
-            {
-                this.typeComboBox.SelectedIndex = 0; // Par défaut "ENTREE"
+                pieceIdTextBox.Text = _mouvement.PieceId;
             }
             
-            // TODO: Dans une vraie implémentation, vous devriez charger la liste des pièces
-            // dans un combobox pour permettre à l'utilisateur de sélectionner une pièce.
+            if (_mouvement.FactureId != null)
+            {
+                factureIdTextBox.Text = _mouvement.FactureId;
+            }
         }
         
         private void SaveButton_Click(object sender, EventArgs e)
@@ -70,38 +63,19 @@ namespace StockApp.MouvementStockForms
             _mouvement.Type = typeComboBox.SelectedItem.ToString();
             _mouvement.Quantite = (int)quantiteNumericUpDown.Value;
             
-            // Essayer de parser le Guid de la pièce
-            if (Guid.TryParse(pieceIdTextBox.Text, out Guid pieceId))
-            {
-                _mouvement.PieceId = pieceId;
-            }
-            else
-            {
-                MessageBox.Show("ID de pièce invalide.", "Erreur de validation", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
+            // Set the piece ID
+            _mouvement.PieceId = pieceIdTextBox.Text;
             
-            // Essayer de parser le Guid de la facture si fourni
+            // Set the facture ID if provided
             if (!string.IsNullOrWhiteSpace(factureIdTextBox.Text))
             {
-                if (Guid.TryParse(factureIdTextBox.Text, out Guid factureId))
-                {
-                    _mouvement.FactureId = factureId;
-                }
-                else
-                {
-                    MessageBox.Show("ID de facture invalide.", "Erreur de validation", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+                _mouvement.FactureId = factureIdTextBox.Text;
             }
             else
             {
                 _mouvement.FactureId = null;
             }
             
-            // Définir le DialogResult pour indiquer le succès
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
@@ -111,9 +85,6 @@ namespace StockApp.MouvementStockForms
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-        
-        // Propriété pour accéder aux données du mouvement
-        public MouvementStock Mouvement => _mouvement;
     }
 } 
  

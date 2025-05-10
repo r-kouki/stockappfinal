@@ -6,6 +6,6 @@ namespace StockApp.Data.Repositories
 {
     public interface IClientRepository : IRepository<Client>
     {
-        Task<Client> GetWithFacturesAsync(Guid id);
+        Task<Client> GetWithFacturesAsync(string id);
     }
 } 

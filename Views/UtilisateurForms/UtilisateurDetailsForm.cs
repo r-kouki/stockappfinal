@@ -13,7 +13,7 @@ namespace StockApp.UtilisateurForms
         {
             InitializeComponent();
             
-            _user = user ?? new User { Id = Guid.NewGuid(), Actif = true };
+            _user = user ?? new User { Id = string.Empty, Actif = true };
             _isNewUser = user == null;
             
             // Configuration du titre du formulaire

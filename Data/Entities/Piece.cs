@@ -5,7 +5,7 @@ namespace StockApp.Data.Entities
 {
     public class Piece
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } = string.Empty;
         public string Marque { get; set; } = string.Empty;
         public string Reference { get; set; } = string.Empty;
         public decimal PrixAchatHT { get; set; }

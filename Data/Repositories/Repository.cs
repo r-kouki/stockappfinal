@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace StockApp.Data.Repositories
 {
@@ -11,11 +12,13 @@ namespace StockApp.Data.Repositories
     {
         protected readonly StockContext _context;
         protected readonly DbSet<T> _dbSet;
+        protected readonly IIdGeneratorService _idGenerator;
 
-        public Repository(StockContext context)
+        public Repository(StockContext context, IIdGeneratorService idGenerator)
         {
             _context = context;
             _dbSet = context.Set<T>();
+            _idGenerator = idGenerator;
         }
 
         public virtual async Task<IEnumerable<T>> GetAllAsync()
@@ -28,7 +31,7 @@ namespace StockApp.Data.Repositories
             return await _dbSet.Where(predicate).ToListAsync();
         }
 
-        public virtual async Task<T> GetByIdAsync(Guid id)
+        public virtual async Task<T> GetByIdAsync(string id)
         {
             return await _dbSet.FindAsync(id);
         }
@@ -37,6 +40,20 @@ namespace StockApp.Data.Repositories
         {
             try
             {
+                // Set a custom ID if not set already
+                var idProperty = entity.GetType().GetProperty("Id");
+                if (idProperty != null && idProperty.PropertyType == typeof(string))
+                {
+                    var currentId = idProperty.GetValue(entity) as string;
+                    if (string.IsNullOrEmpty(currentId))
+                    {
+                        // Generate new ID based on entity type
+                        var entityName = entity.GetType().Name;
+                        var newId = _idGenerator.GenerateId(entityName);
+                        idProperty.SetValue(entity, newId);
+                    }
+                }
+                
                 await _dbSet.AddAsync(entity);
                 await _context.SaveChangesAsync();
             }
@@ -51,8 +68,40 @@ namespace StockApp.Data.Repositories
         {
             try
             {
-                _context.Entry(entity).State = EntityState.Modified;
-                await _context.SaveChangesAsync();
+                // Get the entity's ID through reflection
+                var idProperty = entity.GetType().GetProperty("Id");
+                if (idProperty != null)
+                {
+                    var id = idProperty.GetValue(entity);
+                    
+                    // Create a new context scope to avoid tracking conflicts
+                    using (var scope = Program.ServiceProvider.CreateScope())
+                    {
+                        var newContext = scope.ServiceProvider.GetRequiredService<StockContext>();
+                        
+                        // Find entity with tracking
+                        var existingEntity = await newContext.Set<T>().FindAsync(id);
+                        if (existingEntity != null)
+                        {
+                            // Detach the existing entity
+                            newContext.Entry(existingEntity).State = EntityState.Detached;
+                        }
+                        
+                        // Attach and mark as modified
+                        newContext.Set<T>().Attach(entity);
+                        newContext.Entry(entity).State = EntityState.Modified;
+                        
+                        // Save changes in the new context
+                        await newContext.SaveChangesAsync();
+                        
+                        // Detach in the original context if it exists there
+                        var existingInOriginal = await _dbSet.FindAsync(id);
+                        if (existingInOriginal != null)
+                        {
+                            _context.Entry(existingInOriginal).State = EntityState.Detached;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -61,7 +110,7 @@ namespace StockApp.Data.Repositories
             }
         }
 
-        public virtual async Task DeleteAsync(Guid id)
+        public virtual async Task DeleteAsync(string id)
         {
             try
             {

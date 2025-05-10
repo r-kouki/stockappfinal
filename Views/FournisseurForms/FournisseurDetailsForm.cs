@@ -13,7 +13,7 @@ namespace StockApp.FournisseurForms
         {
             InitializeComponent();
             
-            _fournisseur = fournisseur ?? new Fournisseur { Id = Guid.NewGuid() };
+            _fournisseur = fournisseur ?? new Fournisseur { Id = string.Empty };
             _isNewFournisseur = fournisseur == null;
             
             // Set the form's title based on whether we're adding or editing
