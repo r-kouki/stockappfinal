@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using StockApp.Data.Entities;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace StockApp.Data.Repositories
@@ -18,5 +20,7 @@ namespace StockApp.Data.Repositories
                 .Include(f => f.FacturesAchat)
                 .FirstOrDefaultAsync(f => f.Id == id);
         }
+
+        
     }
 } 

@@ -40,7 +40,7 @@ namespace StockApp.Data.Repositories
         {
             try
             {
-                // Set a custom ID if not set already
+                // Générer l'ID si nécessaire
                 var idProperty = entity.GetType().GetProperty("Id");
                 if (idProperty != null && idProperty.PropertyType == typeof(string))
                 {
@@ -54,12 +54,55 @@ namespace StockApp.Data.Repositories
                     }
                 }
                 
-                await _dbSet.AddAsync(entity);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    // Détacher toute entité existante avec le même ID
+                    if (idProperty != null)
+                    {
+                        var id = idProperty.GetValue(entity);
+                        if (id != null)
+                        {
+                            var existingEntity = await _dbSet.FindAsync(id);
+                            if (existingEntity != null)
+                            {
+                                _context.Entry(existingEntity).State = EntityState.Detached;
+                            }
+                        }
+                    }
+                    
+                    // Tentative simple d'ajout
+                    _context.ChangeTracker.Clear();
+                    await _dbSet.AddAsync(entity);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Erreur d'ajout: {ex.Message} - {ex.InnerException?.Message}");
+                    
+                    // Essayer avec un nouvel ID
+                    if (idProperty != null)
+                    {
+                        var entityName = entity.GetType().Name;
+                        var uniqueId = _idGenerator.GenerateId(entityName) + "_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+                        idProperty.SetValue(entity, uniqueId);
+                        
+                        _context.ChangeTracker.Clear();
+                        await _dbSet.AddAsync(entity);
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in AddAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception dans AddAsync: {ex.GetType().Name}: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Inner Exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+                }
                 throw;
             }
         }
@@ -74,33 +117,20 @@ namespace StockApp.Data.Repositories
                 {
                     var id = idProperty.GetValue(entity);
                     
-                    // Create a new context scope to avoid tracking conflicts
-                    using (var scope = Program.ServiceProvider.CreateScope())
+                    // Détacher toute entité existante
+                    var existingEntity = await _dbSet.FindAsync(id);
+                    if (existingEntity != null)
                     {
-                        var newContext = scope.ServiceProvider.GetRequiredService<StockContext>();
-                        
-                        // Find entity with tracking
-                        var existingEntity = await newContext.Set<T>().FindAsync(id);
-                        if (existingEntity != null)
-                        {
-                            // Detach the existing entity
-                            newContext.Entry(existingEntity).State = EntityState.Detached;
-                        }
-                        
-                        // Attach and mark as modified
-                        newContext.Set<T>().Attach(entity);
-                        newContext.Entry(entity).State = EntityState.Modified;
-                        
-                        // Save changes in the new context
-                        await newContext.SaveChangesAsync();
-                        
-                        // Detach in the original context if it exists there
-                        var existingInOriginal = await _dbSet.FindAsync(id);
-                        if (existingInOriginal != null)
-                        {
-                            _context.Entry(existingInOriginal).State = EntityState.Detached;
-                        }
+                        _context.Entry(existingEntity).State = EntityState.Detached;
                     }
+                    
+                    // Clear tracking et attacher comme modifié
+                    _context.ChangeTracker.Clear();
+                    _context.Set<T>().Attach(entity);
+                    _context.Entry(entity).State = EntityState.Modified;
+                    
+                    // Sauvegarder les changements
+                    await _context.SaveChangesAsync();
                 }
             }
             catch (Exception ex)
