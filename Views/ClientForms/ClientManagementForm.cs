@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using StockApp.Data;
 using StockApp.Data.Entities;
 using StockApp.Data.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,8 @@ namespace StockApp.ClientForms
     public partial class ClientManagementForm : UserControl
     {
         private readonly IClientRepository _clientRepository;
-        private List<Client> _clients = new List<Client>();
+        private readonly StockDataAdapter _dataAdapter;
+        private BindingSource _clientsBindingSource;
         
         public ClientManagementForm()
         {
@@ -25,26 +27,84 @@ namespace StockApp.ClientForms
             // Get the repository from DI
             _clientRepository = Program.ServiceProvider.GetRequiredService<IClientRepository>();
             
-            // Load data from database asynchronously
+            // Initialize the data adapter
+            _dataAdapter = new StockDataAdapter();
+            
+            // Set up binding source
+            _clientsBindingSource = new BindingSource();
+            _clientsBindingSource.DataSource = _dataAdapter.GetDataSet();
+            _clientsBindingSource.DataMember = "Clients";
+            
+            // Set up data binding
+            clientsDataGridView.DataSource = _clientsBindingSource;
+            
+            // Configure columns to match the dataset fields
+            ConfigureColumns();
+            
+            // Load data from database
             LoadDataAsync();
+        }
+        
+        private void ConfigureColumns()
+        {
+            clientsDataGridView.AutoGenerateColumns = false;
+            
+            // Clear existing columns
+            clientsDataGridView.Columns.Clear();
+            
+            // Add columns matching the dataset schema
+            var idColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Id",
+                HeaderText = "ID",
+                Visible = false
+            };
+            
+            var nomColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Nom",
+                HeaderText = "Nom",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var adresseColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Adresse",
+                HeaderText = "Adresse",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                Width = 200
+            };
+            
+            var telephoneColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Telephone",
+                HeaderText = "Téléphone",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var emailColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Email",
+                HeaderText = "Email",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            // Add columns to DataGridView
+            clientsDataGridView.Columns.AddRange(new DataGridViewColumn[] {
+                idColumn,
+                nomColumn,
+                adresseColumn,
+                telephoneColumn,
+                emailColumn
+            });
         }
         
         private async void LoadDataAsync()
         {
-            // Load clients from database in a fire-and-forget manner
-            await LoadClientsAsync();
-        }
-        
-        private async Task LoadClientsAsync()
-        {
             try
             {
-                // Get clients from the database
-                var clients = await _clientRepository.GetAllAsync();
-                _clients = clients.ToList();
-                
-                // Refresh the DataGridView
-                RefreshClientsGrid();
+                // Fill the clients table in the dataset
+                _dataAdapter.FillClientsTable();
             }
             catch (Exception ex)
             {
@@ -64,8 +124,8 @@ namespace StockApp.ClientForms
                     // Add the new client to the database
                     await _clientRepository.AddAsync(detailsForm.Client);
                     
-                    // Reload clients from the database
-                    await LoadClientsAsync();
+                    // Refresh the dataset
+                    _dataAdapter.FillClientsTable();
                     
                     MessageBox.Show("Client ajouté avec succès!", "Succès", 
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -82,42 +142,37 @@ namespace StockApp.ClientForms
         {
             if (this.clientsDataGridView.SelectedRows.Count > 0)
             {
-                // Get the selected client
-                var selectedClient = this.clientsDataGridView.SelectedRows[0].DataBoundItem as Client;
-                
-                if (selectedClient != null)
+                // Get the selected client ID from the DataRowView
+                var selectedRow = clientsDataGridView.SelectedRows[0].DataBoundItem as DataRowView;
+                if (selectedRow != null)
                 {
-                    // Create a copy of the client for editing
-                    var clientCopy = new Client
-                    {
-                        Id = selectedClient.Id,
-                        Nom = selectedClient.Nom,
-                        Prenom = selectedClient.Prenom,
-                        MatFiscal = selectedClient.MatFiscal,
-                        Adresse = selectedClient.Adresse,
-                        Telephone = selectedClient.Telephone,
-                        Credit = selectedClient.Credit
-                    };
+                    var clientId = selectedRow["Id"].ToString();
                     
-                    var detailsForm = new ClientDetailsForm(clientCopy);
+                    // Fetch the actual client entity from the repository
+                    var client = await _clientRepository.GetByIdAsync(clientId);
                     
-                    if (detailsForm.ShowDialog() == DialogResult.OK)
+                    if (client != null)
                     {
-                        try
+                        var detailsForm = new ClientDetailsForm(client);
+                        
+                        if (detailsForm.ShowDialog() == DialogResult.OK)
                         {
-                            // Update the client in the database
-                            await _clientRepository.UpdateAsync(detailsForm.Client);
-                            
-                            // Reload clients from the database
-                            await LoadClientsAsync();
-                            
-                            MessageBox.Show("Client modifié avec succès!", "Succès", 
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Erreur lors de la modification du client: {ex.Message}", 
-                                "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            try
+                            {
+                                // Update the client in the database
+                                await _clientRepository.UpdateAsync(detailsForm.Client);
+                                
+                                // Refresh the dataset
+                                _dataAdapter.FillClientsTable();
+                                
+                                MessageBox.Show("Client modifié avec succès!", "Succès", 
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"Erreur lors de la modification du client: {ex.Message}", 
+                                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
                         }
                     }
                 }
@@ -133,11 +188,14 @@ namespace StockApp.ClientForms
         {
             if (this.clientsDataGridView.SelectedRows.Count > 0)
             {
-                var selectedClient = this.clientsDataGridView.SelectedRows[0].DataBoundItem as Client;
-                
-                if (selectedClient != null)
+                // Get the selected client ID from the DataRowView
+                var selectedRow = clientsDataGridView.SelectedRows[0].DataBoundItem as DataRowView;
+                if (selectedRow != null)
                 {
-                    var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer le client {selectedClient.Nom} {selectedClient.Prenom}?", 
+                    var clientId = selectedRow["Id"].ToString();
+                    var clientName = selectedRow["Nom"].ToString();
+                    
+                    var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer le client {clientName}?", 
                         "Confirmation de suppression", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     
                     if (result == DialogResult.Yes)
@@ -145,10 +203,10 @@ namespace StockApp.ClientForms
                         try
                         {
                             // Delete from the database
-                            await _clientRepository.DeleteAsync(selectedClient.Id);
+                            await _clientRepository.DeleteAsync(clientId);
                             
-                            // Reload clients from the database
-                            await LoadClientsAsync();
+                            // Refresh the dataset
+                            _dataAdapter.FillClientsTable();
                             
                             MessageBox.Show("Client supprimé avec succès!", "Succès", 
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -166,13 +224,6 @@ namespace StockApp.ClientForms
                 MessageBox.Show("Veuillez sélectionner un client à supprimer.", "Aucune sélection", 
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-        }
-        
-        private void RefreshClientsGrid()
-        {
-            // Update the DataSource to refresh the grid
-            this.clientsDataGridView.DataSource = null;
-            this.clientsDataGridView.DataSource = _clients;
         }
     }
 } 

@@ -3,13 +3,20 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using StockApp.Data.Entities;
 using System.Linq;
+using StockApp.Data.Repositories;
+using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
+using System.Data;
+using StockApp.Data;
+using System.Threading.Tasks;
 
 namespace StockApp.UtilisateurForms
 {
     public partial class UtilisateurManagementForm : UserControl
     {
-        // Liste des utilisateurs en mémoire pour démonstration
-        private List<User> users = new List<User>();
+        private readonly IUserRepository _userRepository;
+        private readonly StockDataAdapter _dataAdapter;
+        private BindingSource _usersBindingSource;
         
         public UtilisateurManagementForm()
         {
@@ -31,76 +38,170 @@ namespace StockApp.UtilisateurForms
                 return;
             }
             
-            // Charger les données des utilisateurs
-            RefreshUsersGrid();
+            // Récupérer le repository depuis l'injection de dépendances
+            _userRepository = Program.ServiceProvider.GetRequiredService<IUserRepository>();
+            
+            // Initialiser le DataAdapter pour la liaison de données
+            _dataAdapter = new StockDataAdapter();
+            
+            // Configuration du BindingSource
+            _usersBindingSource = new BindingSource();
+            _usersBindingSource.DataSource = _dataAdapter.GetDataSet();
+            _usersBindingSource.DataMember = "Users";
+            
+            // Lier la grille à la source de données
+            usersDataGridView.DataSource = _usersBindingSource;
+            
+            // Configurer les colonnes
+            ConfigureColumns();
+            
+            // Charger les données
+            LoadDataAsync();
         }
         
-        private void AddButton_Click(object sender, EventArgs e)
+        private void ConfigureColumns()
+        {
+            usersDataGridView.AutoGenerateColumns = false;
+            
+            // Effacer les colonnes existantes
+            usersDataGridView.Columns.Clear();
+            
+            // Ajouter les colonnes correspondant au schéma de données
+            var idColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Id",
+                HeaderText = "ID",
+                Visible = false
+            };
+            
+            var usernameColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Username",
+                HeaderText = "Nom d'utilisateur",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var nomColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Nom",
+                HeaderText = "Nom",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var prenomColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Prenom",
+                HeaderText = "Prénom",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var roleColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Role",
+                HeaderText = "Rôle",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var actifColumn = new DataGridViewCheckBoxColumn
+            {
+                DataPropertyName = "Actif",
+                HeaderText = "Actif",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells
+            };
+            
+            // Ajouter les colonnes à la grille
+            usersDataGridView.Columns.AddRange(new DataGridViewColumn[] {
+                idColumn,
+                usernameColumn,
+                nomColumn,
+                prenomColumn,
+                roleColumn,
+                actifColumn
+            });
+        }
+        
+        private async void LoadDataAsync()
+        {
+            try
+            {
+                // Remplir la table des utilisateurs dans le DataSet
+                _dataAdapter.FillUsersTable();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors du chargement des utilisateurs: {ex.Message}", 
+                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        private async void AddButton_Click(object sender, EventArgs e)
         {
             var detailsForm = new UtilisateurDetailsForm();
             
             if (detailsForm.ShowDialog() == DialogResult.OK)
             {
-                // Ajouter le nouvel utilisateur à la collection
-                users.Add(detailsForm.User);
-                
-                // Rafraîchir la grille
-                RefreshUsersGrid();
-                
-                // Enregistrer l'action dans le log
-                LogActivity($"Ajout de l'utilisateur {detailsForm.User.Username}");
-                
-                MessageBox.Show("Utilisateur ajouté avec succès!", "Succès", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                try
+                {
+                    // Ajouter le nouvel utilisateur à la base de données
+                    await _userRepository.AddAsync(detailsForm.User);
+                    
+                    // Rafraîchir le DataSet
+                    _dataAdapter.FillUsersTable();
+                    
+                    // Enregistrer l'action dans le log
+                    LogActivity($"Ajout de l'utilisateur {detailsForm.User.Username}");
+                    
+                    MessageBox.Show("Utilisateur ajouté avec succès!", "Succès", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de l'ajout de l'utilisateur: {ex.Message}", 
+                        "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
         
-        private void EditButton_Click(object sender, EventArgs e)
+        private async void EditButton_Click(object sender, EventArgs e)
         {
             if (this.usersDataGridView.SelectedRows.Count > 0)
             {
-                // Récupérer l'utilisateur sélectionné
-                var selectedUser = this.usersDataGridView.SelectedRows[0].DataBoundItem as User;
-                
-                if (selectedUser != null)
+                try
                 {
-                    // Créer une copie de l'utilisateur pour l'édition
-                    var userCopy = new User
+                    // Récupérer l'ID de l'utilisateur sélectionné depuis DataRowView
+                    var selectedRow = usersDataGridView.SelectedRows[0].DataBoundItem as DataRowView;
+                    if (selectedRow != null)
                     {
-                        Id = selectedUser.Id,
-                        Username = selectedUser.Username,
-                        PasswordHash = selectedUser.PasswordHash,
-                        Nom = selectedUser.Nom,
-                        Prenom = selectedUser.Prenom,
-                        Role = selectedUser.Role,
-                        Actif = selectedUser.Actif
-                    };
-                    
-                    var detailsForm = new UtilisateurDetailsForm(userCopy);
-                    
-                    if (detailsForm.ShowDialog() == DialogResult.OK)
-                    {
-                        // Trouver l'utilisateur original et le mettre à jour
-                        var originalUser = users.Find(u => u.Id == detailsForm.User.Id);
-                        if (originalUser != null)
+                        var userId = selectedRow["Id"].ToString();
+                        
+                        // Récupérer l'entité utilisateur depuis le repository
+                        var user = await _userRepository.GetByIdAsync(userId);
+                        
+                        if (user != null)
                         {
-                            originalUser.Username = detailsForm.User.Username;
-                            originalUser.PasswordHash = detailsForm.User.PasswordHash;
-                            originalUser.Nom = detailsForm.User.Nom;
-                            originalUser.Prenom = detailsForm.User.Prenom;
-                            originalUser.Role = detailsForm.User.Role;
-                            originalUser.Actif = detailsForm.User.Actif;
+                            var detailsForm = new UtilisateurDetailsForm(user);
                             
-                            // Rafraîchir la grille
-                            RefreshUsersGrid();
-                            
-                            // Enregistrer l'action dans le log
-                            LogActivity($"Modification de l'utilisateur {originalUser.Username}");
-                            
-                            MessageBox.Show("Utilisateur modifié avec succès!", "Succès", 
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            if (detailsForm.ShowDialog() == DialogResult.OK)
+                            {
+                                // Mettre à jour l'utilisateur dans la base de données
+                                await _userRepository.UpdateAsync(detailsForm.User);
+                                
+                                // Rafraîchir le DataSet
+                                _dataAdapter.FillUsersTable();
+                                
+                                // Enregistrer l'action dans le log
+                                LogActivity($"Modification de l'utilisateur {detailsForm.User.Username}");
+                                
+                                MessageBox.Show("Utilisateur modifié avec succès!", "Succès", 
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de la modification de l'utilisateur: {ex.Message}", 
+                        "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
@@ -110,40 +211,50 @@ namespace StockApp.UtilisateurForms
             }
         }
         
-        private void DeleteButton_Click(object sender, EventArgs e)
+        private async void DeleteButton_Click(object sender, EventArgs e)
         {
             if (this.usersDataGridView.SelectedRows.Count > 0)
             {
-                var selectedUser = this.usersDataGridView.SelectedRows[0].DataBoundItem as User;
-                
-                if (selectedUser != null)
+                try
                 {
-                    // Empêcher la suppression de son propre compte
-                    if (selectedUser.Id == LoginForm.CurrentUser.Id)
+                    // Récupérer l'ID de l'utilisateur sélectionné depuis DataRowView
+                    var selectedRow = usersDataGridView.SelectedRows[0].DataBoundItem as DataRowView;
+                    if (selectedRow != null)
                     {
-                        MessageBox.Show("Vous ne pouvez pas supprimer votre propre compte.", 
-                            "Action interdite", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
+                        var userId = selectedRow["Id"].ToString();
+                        var username = selectedRow["Username"].ToString();
+                        
+                        // Empêcher la suppression de son propre compte
+                        if (userId == LoginForm.CurrentUser.Id)
+                        {
+                            MessageBox.Show("Vous ne pouvez pas supprimer votre propre compte.", 
+                                "Action interdite", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+                        
+                        var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer l'utilisateur {username}?", 
+                            "Confirmation de suppression", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                        
+                        if (result == DialogResult.Yes)
+                        {
+                            // Supprimer de la base de données
+                            await _userRepository.DeleteAsync(userId);
+                            
+                            // Rafraîchir le DataSet
+                            _dataAdapter.FillUsersTable();
+                            
+                            // Enregistrer l'action dans le log
+                            LogActivity($"Suppression de l'utilisateur {username}");
+                            
+                            MessageBox.Show("Utilisateur supprimé avec succès!", "Succès", 
+                                MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
                     }
-                    
-                    var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer l'utilisateur {selectedUser.Username}?", 
-                        "Confirmation de suppression", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    
-                    if (result == DialogResult.Yes)
-                    {
-                        // Supprimer de notre collection
-                        string username = selectedUser.Username;
-                        users.Remove(selectedUser);
-                        
-                        // Rafraîchir la grille
-                        RefreshUsersGrid();
-                        
-                        // Enregistrer l'action dans le log
-                        LogActivity($"Suppression de l'utilisateur {username}");
-                        
-                        MessageBox.Show("Utilisateur supprimé avec succès!", "Succès", 
-                            MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Erreur lors de la suppression de l'utilisateur: {ex.Message}", 
+                        "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             else
@@ -151,13 +262,6 @@ namespace StockApp.UtilisateurForms
                 MessageBox.Show("Veuillez sélectionner un utilisateur à supprimer.", "Aucune sélection", 
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-        }
-        
-        private void RefreshUsersGrid()
-        {
-            // Mettre à jour la source de données pour rafraîchir la grille
-            this.usersDataGridView.DataSource = null;
-            this.usersDataGridView.DataSource = users;
         }
         
         private void LogActivity(string activity)

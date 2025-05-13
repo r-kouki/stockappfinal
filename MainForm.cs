@@ -43,9 +43,6 @@ namespace StockApp
                 }
             }
             
-            // Set up search
-            this.searchButton.Click += SearchButton_Click;
-            
             // Update form appearance
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.Margin = new Padding(10);
@@ -67,78 +64,7 @@ namespace StockApp
             ApplyUserRolePermissions();
         }
 
-        private void SearchButton_Click(object sender, EventArgs e)
-        {
-            string searchTerm = searchTextBox.Text.Trim();
-            
-            if (string.IsNullOrWhiteSpace(searchTerm))
-            {
-                MessageBox.Show("Veuillez entrer un terme de recherche", "Recherche vide", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-            
-            // Simplified search - just navigate to the first tab for now
-            ShowSimpleSearchResults(searchTerm);
-        }
 
-        private void ShowSimpleSearchResults(string searchTerm)
-        {
-            // Create a simple dialog to show the search term
-            var resultsForm = new KryptonForm();
-            resultsForm.Text = $"Recherche pour: {searchTerm}";
-            resultsForm.Size = new Size(400, 200);
-            resultsForm.StartPosition = FormStartPosition.CenterParent;
-            resultsForm.PaletteMode = PaletteMode.SparklePurple;
-            resultsForm.FormBorderStyle = FormBorderStyle.FixedDialog;
-            resultsForm.MaximizeBox = false;
-            resultsForm.MinimizeBox = false;
-            
-            // Add a message label
-            var label = new KryptonLabel();
-            label.Location = new Point(20, 20);
-            label.Size = new Size(360, 80);
-            label.StateCommon.ShortText.TextH = PaletteRelativeAlign.Center;
-            label.StateCommon.ShortText.Font = new Font("Segoe UI", 10F);
-            label.Values.Text = $"Recherche en cours d'implémentation.\n\nVotre recherche: {searchTerm}";
-            
-            // Add buttons for each section
-            var clientsButton = new KryptonButton();
-            clientsButton.Location = new Point(20, 100);
-            clientsButton.Size = new Size(100, 30);
-            clientsButton.Values.Text = "Clients";
-            clientsButton.Click += (s, e) => {
-                tabControl.SelectedPage = clientsPage;
-                resultsForm.Close();
-            };
-            ApplyIOSButtonStyle(clientsButton);
-            
-            var piecesButton = new KryptonButton();
-            piecesButton.Location = new Point(140, 100);
-            piecesButton.Size = new Size(100, 30);
-            piecesButton.Values.Text = "Pièces";
-            piecesButton.Click += (s, e) => {
-                tabControl.SelectedPage = piecesPage;
-                resultsForm.Close();
-            };
-            ApplyIOSButtonStyle(piecesButton);
-            
-            var facturesButton = new KryptonButton();
-            facturesButton.Location = new Point(260, 100);
-            facturesButton.Size = new Size(100, 30);
-            facturesButton.Values.Text = "Factures";
-            facturesButton.Click += (s, e) => {
-                tabControl.SelectedPage = facturesVentePage;
-                resultsForm.Close();
-            };
-            ApplyIOSButtonStyle(facturesButton);
-            
-            resultsForm.Controls.Add(label);
-            resultsForm.Controls.Add(clientsButton);
-            resultsForm.Controls.Add(piecesButton);
-            resultsForm.Controls.Add(facturesButton);
-            
-            resultsForm.ShowDialog();
-        }
 
         private void ApplyIOSButtonStyle(KryptonButton button)
         {

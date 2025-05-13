@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using StockApp.Data;
 using StockApp.Data.Entities;
 using StockApp.Data.Repositories;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,8 @@ namespace StockApp.FournisseurForms
     public partial class FournisseurManagementForm : UserControl
     {
         private readonly IFournisseurRepository _fournisseurRepository;
-        private List<Fournisseur> _fournisseurs = new List<Fournisseur>();
+        private readonly StockDataAdapter _dataAdapter;
+        private BindingSource _fournisseursBindingSource;
         
         public FournisseurManagementForm()
         {
@@ -25,26 +27,84 @@ namespace StockApp.FournisseurForms
             // Get the repository from DI
             _fournisseurRepository = Program.ServiceProvider.GetRequiredService<IFournisseurRepository>();
             
-            // Load data from database asynchronously
+            // Initialize the data adapter
+            _dataAdapter = new StockDataAdapter();
+            
+            // Set up binding source
+            _fournisseursBindingSource = new BindingSource();
+            _fournisseursBindingSource.DataSource = _dataAdapter.GetDataSet();
+            _fournisseursBindingSource.DataMember = "Fournisseurs";
+            
+            // Set up data binding
+            fournisseursDataGridView.DataSource = _fournisseursBindingSource;
+            
+            // Configure columns to match the dataset fields
+            ConfigureColumns();
+            
+            // Load data from database
             LoadDataAsync();
+        }
+        
+        private void ConfigureColumns()
+        {
+            fournisseursDataGridView.AutoGenerateColumns = false;
+            
+            // Clear existing columns
+            fournisseursDataGridView.Columns.Clear();
+            
+            // Add columns matching the dataset schema
+            var idColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Id",
+                HeaderText = "ID",
+                Visible = false
+            };
+            
+            var nomColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Nom",
+                HeaderText = "Nom",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var adresseColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Adresse",
+                HeaderText = "Adresse",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                Width = 200
+            };
+            
+            var telephoneColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Telephone",
+                HeaderText = "Téléphone",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            var emailColumn = new DataGridViewTextBoxColumn
+            {
+                DataPropertyName = "Email",
+                HeaderText = "Email",
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            };
+            
+            // Add columns to DataGridView
+            fournisseursDataGridView.Columns.AddRange(new DataGridViewColumn[] {
+                idColumn,
+                nomColumn,
+                adresseColumn,
+                telephoneColumn,
+                emailColumn
+            });
         }
         
         private async void LoadDataAsync()
         {
-            // Load fournisseurs from database in a fire-and-forget manner
-            await LoadFournisseursAsync();
-        }
-        
-        private async Task LoadFournisseursAsync()
-        {
             try
             {
-                // Get fournisseurs from the database
-                var fournisseurs = await _fournisseurRepository.GetAllAsync();
-                _fournisseurs = fournisseurs.ToList();
-                
-                // Refresh the DataGridView
-                RefreshFournisseursGrid();
+                // Fill the fournisseurs table in the dataset
+                _dataAdapter.FillFournisseursTable();
             }
             catch (Exception ex)
             {
@@ -64,8 +124,8 @@ namespace StockApp.FournisseurForms
                     // Add the new fournisseur to the database
                     await _fournisseurRepository.AddAsync(detailsForm.Fournisseur);
                     
-                    // Reload fournisseurs from the database
-                    await LoadFournisseursAsync();
+                    // Refresh the dataset
+                    _dataAdapter.FillFournisseursTable();
                     
                     MessageBox.Show("Fournisseur ajouté avec succès!", "Succès", 
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -82,42 +142,37 @@ namespace StockApp.FournisseurForms
         {
             if (this.fournisseursDataGridView.SelectedRows.Count > 0)
             {
-                // Get the selected fournisseur
-                var selectedFournisseur = this.fournisseursDataGridView.SelectedRows[0].DataBoundItem as Fournisseur;
-                
-                if (selectedFournisseur != null)
+                // Get the selected fournisseur ID from the DataRowView
+                var selectedRow = fournisseursDataGridView.SelectedRows[0].DataBoundItem as DataRowView;
+                if (selectedRow != null)
                 {
-                    // Create a copy of the fournisseur for editing
-                    var fournisseurCopy = new Fournisseur
-                    {
-                        Id = selectedFournisseur.Id,
-                        Nom = selectedFournisseur.Nom,
-                        Prenom = selectedFournisseur.Prenom,
-                        MatFiscal = selectedFournisseur.MatFiscal,
-                        Adresse = selectedFournisseur.Adresse,
-                        Telephone = selectedFournisseur.Telephone,
-                        Credit = selectedFournisseur.Credit
-                    };
+                    var fournisseurId = selectedRow["Id"].ToString();
                     
-                    var detailsForm = new FournisseurDetailsForm(fournisseurCopy);
+                    // Fetch the actual fournisseur entity from the repository
+                    var fournisseur = await _fournisseurRepository.GetByIdAsync(fournisseurId);
                     
-                    if (detailsForm.ShowDialog() == DialogResult.OK)
+                    if (fournisseur != null)
                     {
-                        try
+                        var detailsForm = new FournisseurDetailsForm(fournisseur);
+                        
+                        if (detailsForm.ShowDialog() == DialogResult.OK)
                         {
-                            // Update the fournisseur in the database
-                            await _fournisseurRepository.UpdateAsync(detailsForm.Fournisseur);
-                            
-                            // Reload fournisseurs from the database
-                            await LoadFournisseursAsync();
-                            
-                            MessageBox.Show("Fournisseur modifié avec succès!", "Succès", 
-                                MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Erreur lors de la modification du fournisseur: {ex.Message}", 
-                                "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            try
+                            {
+                                // Update the fournisseur in the database
+                                await _fournisseurRepository.UpdateAsync(detailsForm.Fournisseur);
+                                
+                                // Refresh the dataset
+                                _dataAdapter.FillFournisseursTable();
+                                
+                                MessageBox.Show("Fournisseur modifié avec succès!", "Succès", 
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"Erreur lors de la modification du fournisseur: {ex.Message}", 
+                                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
                         }
                     }
                 }
@@ -133,11 +188,14 @@ namespace StockApp.FournisseurForms
         {
             if (this.fournisseursDataGridView.SelectedRows.Count > 0)
             {
-                var selectedFournisseur = this.fournisseursDataGridView.SelectedRows[0].DataBoundItem as Fournisseur;
-                
-                if (selectedFournisseur != null)
+                // Get the selected fournisseur ID from the DataRowView
+                var selectedRow = fournisseursDataGridView.SelectedRows[0].DataBoundItem as DataRowView;
+                if (selectedRow != null)
                 {
-                    var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer le fournisseur {selectedFournisseur.Nom} {selectedFournisseur.Prenom}?", 
+                    var fournisseurId = selectedRow["Id"].ToString();
+                    var fournisseurName = selectedRow["Nom"].ToString();
+                    
+                    var result = MessageBox.Show($"Êtes-vous sûr de vouloir supprimer le fournisseur {fournisseurName}?", 
                         "Confirmation de suppression", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     
                     if (result == DialogResult.Yes)
@@ -145,10 +203,10 @@ namespace StockApp.FournisseurForms
                         try
                         {
                             // Delete from the database
-                            await _fournisseurRepository.DeleteAsync(selectedFournisseur.Id);
+                            await _fournisseurRepository.DeleteAsync(fournisseurId);
                             
-                            // Reload fournisseurs from the database
-                            await LoadFournisseursAsync();
+                            // Refresh the dataset
+                            _dataAdapter.FillFournisseursTable();
                             
                             MessageBox.Show("Fournisseur supprimé avec succès!", "Succès", 
                                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -166,13 +224,6 @@ namespace StockApp.FournisseurForms
                 MessageBox.Show("Veuillez sélectionner un fournisseur à supprimer.", "Aucune sélection", 
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-        }
-        
-        private void RefreshFournisseursGrid()
-        {
-            // Update the DataSource to refresh the grid
-            this.fournisseursDataGridView.DataSource = null;
-            this.fournisseursDataGridView.DataSource = _fournisseurs;
         }
     }
 } 

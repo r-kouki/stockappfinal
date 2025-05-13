@@ -76,7 +76,8 @@ namespace StockApp.FactureForms
                 clientComboBox.Enabled = false;
                 
                 // Obtenir les clients depuis la base de données
-                var clients = await _clientRepository.GetAllAsync();
+                var clients = await Task.Run(() => _clientRepository.GetAllAsync()).ConfigureAwait(true);
+                
                 _clients = new List<Client>(clients);
                 
                 // Mettre à jour la ComboBox
@@ -107,7 +108,7 @@ namespace StockApp.FactureForms
             }
         }
         
-        private async void SaveButton_Click(object sender, EventArgs e)
+        private void SaveButton_Click(object sender, EventArgs e)
         {
             // Valider les entrées
             if (clientComboBox.SelectedItem == null)
@@ -128,43 +129,29 @@ namespace StockApp.FactureForms
             
             try
             {
-                // Créer une nouvelle instance de facture plutôt que de modifier l'existante
-                // Cette approche évite les problèmes de suivi d'entité
-                var newFacture = new FactureVente
-                {
-                    Id = _facture.Id,
-                    Date = dateTimePicker.Value,
-                    DateEcheance = dateEcheanceTimePicker.Value,
-                    MontantPaye = _facture.MontantPaye,
-                    Note = _facture.Note,
-                    NumeroFactureClient = _facture.NumeroFactureClient
-                };
-                
-                // Récupérer l'ID du client sélectionné, mais ne pas stocker la référence à l'objet Client
+                // Ensure ClientId is set directly from the selected client
                 if (clientComboBox.SelectedItem is Client selectedClient)
                 {
-                    newFacture.ClientId = selectedClient.Id;
+                    _facture.ClientId = selectedClient.Id;
                 }
-                
-                // Créer des copies des lignes de facture pour éviter les problèmes de suivi d'entité
-                newFacture.LignesFacture = new List<LigneFacture>();
-                foreach (var ligne in _facture.LignesFacture)
+                else
                 {
-                    var newLigne = new LigneFacture
-                    {
-                        Id = ligne.Id,
-                        Quantite = ligne.Quantite,
-                        PrixUnitaireHT = ligne.PrixUnitaireHT,
-                        RemisePct = ligne.RemisePct,
-                        PieceId = ligne.PieceId,
-                        FactureId = newFacture.Id
-                    };
-                    
-                    newFacture.LignesFacture.Add(newLigne);
+                    MessageBox.Show("Erreur: Sélection de client invalide.", "Validation", 
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
                 
-                // Remplacer la facture actuelle par la nouvelle
-                _facture = newFacture;
+                // Set other invoice properties directly on existing facture object
+                _facture.Date = dateTimePicker.Value;
+                _facture.DateEcheance = dateEcheanceTimePicker.Value;
+                
+                // Double check that all line items have valid piece IDs
+                if (_facture.LignesFacture.Any(l => string.IsNullOrEmpty(l.PieceId)))
+                {
+                    MessageBox.Show("Erreur: Une ou plusieurs lignes de facture contiennent des articles invalides.", 
+                        "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
                 
                 // Définir le DialogResult pour indiquer le succès
                 this.DialogResult = DialogResult.OK;
@@ -183,7 +170,7 @@ namespace StockApp.FactureForms
             this.Close();
         }
         
-        private async void AddLigneButton_Click(object sender, EventArgs e)
+        private void AddLigneButton_Click(object sender, EventArgs e)
         {
             try
             {
@@ -199,59 +186,71 @@ namespace StockApp.FactureForms
                         return;
                     }
                     
-                    try
+                    Task.Run(async () => 
                     {
-                        // Vérifier le stock disponible
-                        var piece = await _pieceRepository.GetByIdAsync(ligneForm.LigneFacture.PieceId);
-                        if (piece == null)
+                        try
                         {
-                            MessageBox.Show("Pièce non trouvée dans la base de données.", 
-                                "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
+                            // Vérifier le stock disponible
+                            var piece = await _pieceRepository.GetByIdAsync(ligneForm.LigneFacture.PieceId);
+                            if (piece == null)
+                            {
+                                this.Invoke((MethodInvoker)delegate 
+                                {
+                                    MessageBox.Show("Pièce non trouvée dans la base de données.", 
+                                        "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                });
+                                return;
+                            }
+                            
+                            if (piece.Stock < ligneForm.LigneFacture.Quantite)
+                            {
+                                this.Invoke((MethodInvoker)delegate 
+                                {
+                                    MessageBox.Show($"Stock insuffisant. Stock disponible: {piece.Stock}, Quantité demandée: {ligneForm.LigneFacture.Quantite}", 
+                                        "Stock insuffisant", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                });
+                                return;
+                            }
+                            
+                            // Update UI on the UI thread
+                            this.Invoke((MethodInvoker)delegate 
+                            {
+                                // Créer une nouvelle ligne plutôt que d'utiliser directement celle du formulaire
+                                var nouvelleLigne = new LigneFacture
+                                {
+                                    Id = string.Empty, // L'ID sera généré par le repository
+                                    PieceId = ligneForm.LigneFacture.PieceId,
+                                    Quantite = ligneForm.LigneFacture.Quantite,
+                                    PrixUnitaireHT = ligneForm.LigneFacture.PrixUnitaireHT,
+                                    RemisePct = ligneForm.LigneFacture.RemisePct,
+                                    FactureId = _facture.Id
+                                };
+                                
+                                // Ajouter la ligne à la facture
+                                if (_facture.LignesFacture == null)
+                                {
+                                    _facture.LignesFacture = new List<LigneFacture>();
+                                }
+                                
+                                _facture.LignesFacture.Add(nouvelleLigne);
+                                
+                                // Rafraîchir la grille des lignes
+                                RefreshLignesFactureGrid();
+                                
+                                // Message de succès
+                                MessageBox.Show($"Ligne ajoutée avec succès", 
+                                    "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            });
                         }
-                        
-                        if (piece.Stock < ligneForm.LigneFacture.Quantite)
+                        catch (Exception ex)
                         {
-                            MessageBox.Show($"Stock insuffisant. Stock disponible: {piece.Stock}, Quantité demandée: {ligneForm.LigneFacture.Quantite}", 
-                                "Stock insuffisant", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
+                            this.Invoke((MethodInvoker)delegate 
+                            {
+                                MessageBox.Show($"Erreur lors de la vérification du stock: {ex.Message}", 
+                                    "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            });
                         }
-                        
-                        // Créer une nouvelle ligne plutôt que d'utiliser directement celle du formulaire
-                        // Cette approche évite les problèmes de suivi d'entité
-                        var nouvelleLigne = new LigneFacture
-                        {
-                            Id = string.Empty, // L'ID sera généré par le repository
-                            PieceId = ligneForm.LigneFacture.PieceId,
-                            Quantite = ligneForm.LigneFacture.Quantite,
-                            PrixUnitaireHT = ligneForm.LigneFacture.PrixUnitaireHT,
-                            RemisePct = ligneForm.LigneFacture.RemisePct,
-                            FactureId = _facture.Id
-                        };
-                        
-                        // Ajouter la ligne à la facture
-                        if (_facture.LignesFacture == null)
-                        {
-                            _facture.LignesFacture = new List<LigneFacture>();
-                        }
-                        
-                        _facture.LignesFacture.Add(nouvelleLigne);
-                        
-                        // Rafraîchir la grille des lignes
-                        RefreshLignesFactureGrid();
-                        
-                        // Mettre en place une architecture évitant la mise à jour directe du stock dans le formulaire
-                        // On laissera le repository s'occuper de la mise à jour du stock lors de l'ajout de la facture
-                        
-                        // Message de succès
-                        MessageBox.Show($"Ligne ajoutée avec succès", 
-                            "Succès", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"Erreur lors de la vérification du stock: {ex.Message}", 
-                            "Erreur", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    });
                 }
             }
             catch (Exception ex)

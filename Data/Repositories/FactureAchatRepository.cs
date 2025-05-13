@@ -12,7 +12,7 @@ namespace StockApp.Data.Repositories
     {
         private readonly IMouvementStockRepository _mouvementStockRepository;
         private readonly IPieceRepository _pieceRepository;
-        private readonly IIdGeneratorService _idGenerator;
+        private new readonly IIdGeneratorService _idGenerator;
 
         public FactureAchatRepository(
             StockContext context, 
@@ -47,107 +47,321 @@ namespace StockApp.Data.Repositories
 
         public override async Task AddAsync(FactureAchat facture)
         {
-            // Make sure we're using a new context for this operation to avoid tracking conflicts
-            using (var scope = Program.ServiceProvider.CreateScope())
+            try
             {
-                var newContext = scope.ServiceProvider.GetRequiredService<StockContext>();
-                
-                try
+                // Validation de base
+                if (string.IsNullOrEmpty(facture.FournisseurId))
                 {
-                    // Start a transaction to ensure data consistency
-                    using (var transaction = await newContext.Database.BeginTransactionAsync())
+                    throw new Exception("La facture doit avoir un FournisseurId valide");
+                }
+                
+                if (facture.LignesFacture == null || facture.LignesFacture.Count == 0)
+                {
+                    throw new Exception("La facture doit avoir au moins une ligne");
+                }
+                
+                // Utiliser directement le contexte principal pour éviter les problèmes de multiples contextes
+                _context.Database.AutoTransactionBehavior = AutoTransactionBehavior.Never;
+                
+                // Vérifier si l'entité est déjà suivie et la détacher si nécessaire
+                var existingEntry = _context.ChangeTracker.Entries<FactureAchat>()
+                    .FirstOrDefault(e => e.Entity.Id == facture.Id);
+                
+                if (existingEntry != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Détachement d'une entité existante avec ID {facture.Id}");
+                    existingEntry.State = EntityState.Detached;
+                }
+                
+                using (var transaction = await _context.Database.BeginTransactionAsync())
+                {
+                    try
                     {
+                        // 1. Générer et vérifier l'ID de facture
+                        if (string.IsNullOrEmpty(facture.Id))
+                        {
+                            facture.Id = await GenerateUniqueFactureIdAsync();
+                            System.Diagnostics.Debug.WriteLine($"ID généré pour la facture: {facture.Id}");
+                        }
+                        else
+                        {
+                            // Vérifier si l'ID existe déjà dans la base de données
+                            bool idExists = await _context.FacturesAchat.AnyAsync(f => f.Id == facture.Id);
+                            if (idExists)
+                            {
+                                // Générer un nouvel ID si conflit
+                                facture.Id = await GenerateUniqueFactureIdAsync();
+                                System.Diagnostics.Debug.WriteLine($"ID en conflit, nouvel ID généré: {facture.Id}");
+                            }
+                        }
+                        
+                        // Vérifier à nouveau après génération d'ID si nécessaire
+                        existingEntry = _context.ChangeTracker.Entries<FactureAchat>()
+                            .FirstOrDefault(e => e.Entity.Id == facture.Id);
+                        
+                        if (existingEntry != null)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Détachement d'une entité existante avec ID généré {facture.Id}");
+                            existingEntry.State = EntityState.Detached;
+                        }
+                        
+                        // 2. Stocker temporairement les lignes et les dissocier de la facture
+                        var lignesFacture = facture.LignesFacture.ToList();
+                        facture.LignesFacture = null;
+                        
+                        // 3. Enregistrer la facture seule d'abord
+                        System.Diagnostics.Debug.WriteLine($"Ajout facture simple: Id={facture.Id}, FournisseurId={facture.FournisseurId}");
+                        
+                        _context.FacturesAchat.Add(facture);
                         try
                         {
-                            // Save the invoice entity first without lines
-                            var lignesFacture = facture.LignesFacture?.ToList();
-                            facture.LignesFacture = null;
-                            
-                            // Set a custom ID if not set already
-                            var idProperty = facture.GetType().GetProperty("Id");
-                            if (idProperty != null && idProperty.PropertyType == typeof(string))
-                            {
-                                var currentId = idProperty.GetValue(facture) as string;
-                                if (string.IsNullOrEmpty(currentId))
-                                {
-                                    // Generate new ID based on entity type
-                                    var entityName = facture.GetType().Name;
-                                    var newId = _idGenerator.GenerateId(entityName);
-                                    idProperty.SetValue(facture, newId);
-                                }
-                            }
-                            
-                            // Add the invoice without lines
-                            await newContext.FacturesAchat.AddAsync(facture);
-                            await newContext.SaveChangesAsync();
-                            
-                            // Add each line with a reference to the invoice
-                            if (lignesFacture != null)
-                            {
-                                foreach (var ligne in lignesFacture)
-                                {
-                                    // Set a custom ID if not set already
-                                    var ligneIdProperty = ligne.GetType().GetProperty("Id");
-                                    if (ligneIdProperty != null && ligneIdProperty.PropertyType == typeof(string))
-                                    {
-                                        var currentLigneId = ligneIdProperty.GetValue(ligne) as string;
-                                        if (string.IsNullOrEmpty(currentLigneId))
-                                        {
-                                            // Generate new ID based on entity type
-                                            var entityName = ligne.GetType().Name;
-                                            var newId = _idGenerator.GenerateId(entityName);
-                                            ligneIdProperty.SetValue(ligne, newId);
-                                        }
-                                    }
-                                    
-                                    // Set the invoice ID
-                                    ligne.FactureId = facture.Id;
-                                    
-                                    // Add the line
-                                    await newContext.LignesFacture.AddAsync(ligne);
-                                    await newContext.SaveChangesAsync();
-                                    
-                                    // Create stock movement (ENTREE) directly
-                                    var mouvement = new MouvementStock
-                                    {
-                                        Date = DateTime.Now,
-                                        Type = "ENTREE",
-                                        Quantite = ligne.Quantite,
-                                        PieceId = ligne.PieceId,
-                                        FactureId = facture.Id
-                                    };
-                                    
-                                    // Add directly to context
-                                    await newContext.MouvementsStock.AddAsync(mouvement);
-                                    await newContext.SaveChangesAsync();
-                                    
-                                    // Update stock quantity directly
-                                    var piece = await newContext.Pieces.FindAsync(ligne.PieceId);
-                                    if (piece != null)
-                                    {
-                                        piece.Stock += ligne.Quantite; // Add to stock for purchase
-                                        await newContext.SaveChangesAsync();
-                                    }
-                                }
-                            }
-                            
-                            // Commit the transaction
-                            await transaction.CommitAsync();
+                            await _context.SaveChangesAsync();
+                            System.Diagnostics.Debug.WriteLine("Facture enregistrée avec succès");
                         }
                         catch (Exception ex)
                         {
-                            // Rollback the transaction if there's an error
-                            await transaction.RollbackAsync();
-                            throw new Exception($"Error adding invoice: {ex.Message}", ex);
+                            // Capturer tous les détails de l'exception SQL
+                            var fullError = $"Erreur lors de l'enregistrement de la facture: {ex.Message}";
+                            var innerEx = ex.InnerException;
+                            while (innerEx != null)
+                            {
+                                fullError += $"\nInner: {innerEx.GetType().Name} - {innerEx.Message}";
+                                innerEx = innerEx.InnerException;
+                            }
+                            
+                            System.Diagnostics.Debug.WriteLine(fullError);
+                            throw new Exception($"Erreur SQL lors de l'enregistrement de la facture: {fullError}");
                         }
+                        
+                        // 4. Générer les IDs des lignes et les associer à la facture
+                        foreach (var ligne in lignesFacture)
+                        {
+                            if (string.IsNullOrEmpty(ligne.Id))
+                            {
+                                ligne.Id = await GenerateUniqueLigneFactureIdAsync();
+                            }
+                            else
+                            {
+                                // Vérifier si l'ID existe déjà
+                                bool idExists = await _context.LignesFacture.AnyAsync(l => l.Id == ligne.Id);
+                                if (idExists)
+                                {
+                                    ligne.Id = await GenerateUniqueLigneFactureIdAsync();
+                                }
+                            }
+                            
+                            ligne.FactureId = facture.Id;
+                            
+                            // Vérifier si la ligne est déjà suivie
+                            var existingLineEntry = _context.ChangeTracker.Entries<LigneFacture>()
+                                .FirstOrDefault(e => e.Entity.Id == ligne.Id);
+                                
+                            if (existingLineEntry != null)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"Détachement d'une ligne existante avec ID {ligne.Id}");
+                                existingLineEntry.State = EntityState.Detached;
+                            }
+                            
+                            // Vérifier la pièce
+                            var piece = await _context.Pieces.FindAsync(ligne.PieceId);
+                            if (piece == null)
+                            {
+                                throw new Exception($"La pièce {ligne.PieceId} n'existe pas");
+                            }
+                        }
+                        
+                        // 5. Ajouter les lignes une par une
+                        foreach (var ligne in lignesFacture)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Ajout ligne: Id={ligne.Id}, PieceId={ligne.PieceId}, FactureId={ligne.FactureId}");
+                            _context.LignesFacture.Add(ligne);
+                            
+                            try
+                            {
+                                await _context.SaveChangesAsync();
+                                System.Diagnostics.Debug.WriteLine($"Ligne {ligne.Id} enregistrée avec succès");
+                            }
+                            catch (Exception ex)
+                            {
+                                var fullError = $"Erreur lors de l'enregistrement de la ligne {ligne.Id}: {ex.Message}";
+                                var innerEx = ex.InnerException;
+                                while (innerEx != null)
+                                {
+                                    fullError += $"\nInner: {innerEx.GetType().Name} - {innerEx.Message}";
+                                    innerEx = innerEx.InnerException;
+                                }
+                                
+                                System.Diagnostics.Debug.WriteLine(fullError);
+                                throw new Exception($"Erreur SQL lors de l'enregistrement d'une ligne: {fullError}");
+                            }
+                            
+                            // Créer le mouvement de stock et mettre à jour le stock
+                            var piece = await _context.Pieces.FindAsync(ligne.PieceId);
+                            
+                            var mouvement = new MouvementStock
+                            {
+                                Id = await GenerateUniqueMouvementStockIdAsync(),
+                                Date = DateTime.Now,
+                                Type = "ENTREE", // ENTREE pour facture d'achat
+                                Quantite = ligne.Quantite,
+                                PieceId = ligne.PieceId,
+                                FactureId = facture.Id
+                            };
+                            
+                            _context.MouvementsStock.Add(mouvement);
+                            
+                            // Mettre à jour le stock (ajout pour achat)
+                            piece.Stock += ligne.Quantite;
+                            
+                            // Sauvegarder le mouvement et la mise à jour du stock
+                            try
+                            {
+                                await _context.SaveChangesAsync();
+                                System.Diagnostics.Debug.WriteLine($"Mouvement de stock et mise à jour du stock pour {ligne.PieceId} réussis");
+                            }
+                            catch (Exception ex)
+                            {
+                                var fullError = $"Erreur lors de la mise à jour du stock: {ex.Message}";
+                                var innerEx = ex.InnerException;
+                                while (innerEx != null)
+                                {
+                                    fullError += $"\nInner: {innerEx.GetType().Name} - {innerEx.Message}";
+                                    innerEx = innerEx.InnerException;
+                                }
+                                
+                                System.Diagnostics.Debug.WriteLine(fullError);
+                                throw new Exception($"Erreur SQL lors de la mise à jour du stock: {fullError}");
+                            }
+                        }
+                        
+                        // 6. Valider la transaction
+                        await transaction.CommitAsync();
+                        System.Diagnostics.Debug.WriteLine("Transaction validée avec succès");
+                        
+                        // 7. Réassocier les lignes à la facture pour le retour
+                        facture.LignesFacture = lignesFacture;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Annuler la transaction en cas d'erreur
+                        await transaction.RollbackAsync();
+                        System.Diagnostics.Debug.WriteLine($"Transaction annulée: {ex.Message}");
+                        throw; // Relancer l'exception pour la capturer au niveau supérieur
                     }
                 }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Error in AddAsync: {ex.Message}");
-                    throw;
-                }
             }
+            catch (Exception ex)
+            {
+                // Capturer tous les détails et construire un message complet
+                var fullError = new System.Text.StringBuilder();
+                fullError.AppendLine($"ERREUR COMPLÈTE: {ex.Message}");
+                
+                // Parcourir la chaîne d'exceptions internes
+                var currentEx = ex;
+                int level = 0;
+                
+                while (currentEx.InnerException != null)
+                {
+                    level++;
+                    currentEx = currentEx.InnerException;
+                    fullError.AppendLine($"NIVEAU {level}: [{currentEx.GetType().Name}] {currentEx.Message}");
+                }
+                
+                fullError.AppendLine("STACK TRACE:");
+                fullError.AppendLine(ex.StackTrace);
+                
+                // Afficher le message complet dans la console
+                System.Diagnostics.Debug.WriteLine(fullError.ToString());
+                
+                // Relancer l'exception avec tous les détails
+                throw new Exception($"Erreur lors de l'ajout de la facture: {ex.Message}", ex);
+            }
+        }
+        
+        // Méthodes auxiliaires pour générer des IDs uniques
+        private async Task<string> GenerateUniqueFactureIdAsync()
+        {
+            string id;
+            bool idExists;
+            int attempts = 0;
+            const int maxAttempts = 10;
+            
+            do
+            {
+                attempts++;
+                id = _idGenerator.GenerateId(nameof(FactureAchat));
+                idExists = await _context.FacturesAchat.AnyAsync(f => f.Id == id);
+                
+                if (idExists)
+                {
+                    System.Diagnostics.Debug.WriteLine($"ID {id} déjà existant, tentative {attempts}");
+                    // Attendre un peu pour éviter les collisions avec le time-based ID
+                    await Task.Delay(10);
+                }
+            } while (idExists && attempts < maxAttempts);
+            
+            if (idExists)
+            {
+                // Si après 10 essais on n'a pas d'ID unique, utiliser un GUID
+                id = $"FA{DateTime.Now:yy}{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+                System.Diagnostics.Debug.WriteLine($"Utilisation d'un GUID pour l'ID: {id}");
+            }
+            
+            return id;
+        }
+        
+        private async Task<string> GenerateUniqueLigneFactureIdAsync()
+        {
+            string id;
+            bool idExists;
+            int attempts = 0;
+            const int maxAttempts = 10;
+            
+            do
+            {
+                attempts++;
+                id = _idGenerator.GenerateId(nameof(LigneFacture));
+                idExists = await _context.LignesFacture.AnyAsync(l => l.Id == id);
+                
+                if (idExists)
+                {
+                    await Task.Delay(10);
+                }
+            } while (idExists && attempts < maxAttempts);
+            
+            if (idExists)
+            {
+                id = $"LF{DateTime.Now:yy}{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+            }
+            
+            return id;
+        }
+        
+        private async Task<string> GenerateUniqueMouvementStockIdAsync()
+        {
+            string id;
+            bool idExists;
+            int attempts = 0;
+            const int maxAttempts = 10;
+            
+            do
+            {
+                attempts++;
+                id = _idGenerator.GenerateId(nameof(MouvementStock));
+                idExists = await _context.MouvementsStock.AnyAsync(m => m.Id == id);
+                
+                if (idExists)
+                {
+                    await Task.Delay(10);
+                }
+            } while (idExists && attempts < maxAttempts);
+            
+            if (idExists)
+            {
+                id = $"MS{DateTime.Now:yy}{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+            }
+            
+            return id;
         }
 
         public override async Task DeleteAsync(string id)

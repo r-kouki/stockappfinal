@@ -28,189 +28,204 @@ namespace StockApp
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.kryptonPalette = new Krypton.Toolkit.KryptonCustomPaletteBase(this.components);
-            this.tabControl = new Krypton.Navigator.KryptonNavigator();
-            this.clientsPage = new Krypton.Navigator.KryptonPage();
-            this.fournisseursPage = new Krypton.Navigator.KryptonPage();
-            this.piecesPage = new Krypton.Navigator.KryptonPage();
-            this.facturesVentePage = new Krypton.Navigator.KryptonPage();
-            this.facturesAchatPage = new Krypton.Navigator.KryptonPage();
-            this.utilisateursPage = new Krypton.Navigator.KryptonPage();
-            this.mouvementsStockPage = new Krypton.Navigator.KryptonPage();
-            this.searchTextBox = new Krypton.Toolkit.KryptonTextBox();
-            this.searchButton = new Krypton.Toolkit.KryptonButton();
-            this.searchPanel = new Krypton.Toolkit.KryptonPanel();
-            this.headerPanel = new Krypton.Toolkit.KryptonPanel();
-            this.headerLabel = new Krypton.Toolkit.KryptonLabel();
-            
-            ((System.ComponentModel.ISupportInitialize)(this.tabControl)).BeginInit();
-            this.tabControl.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.clientsPage)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.fournisseursPage)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.piecesPage)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.facturesVentePage)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.facturesAchatPage)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.utilisateursPage)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.mouvementsStockPage)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.searchPanel)).BeginInit();
-            this.searchPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.headerPanel)).BeginInit();
-            this.headerPanel.SuspendLayout();
-            this.SuspendLayout();
-            
+            components = new System.ComponentModel.Container();
+            kryptonPalette = new Krypton.Toolkit.KryptonCustomPaletteBase(components);
+            tabControl = new Krypton.Navigator.KryptonNavigator();
+            clientsPage = new Krypton.Navigator.KryptonPage();
+            fournisseursPage = new Krypton.Navigator.KryptonPage();
+            piecesPage = new Krypton.Navigator.KryptonPage();
+            facturesVentePage = new Krypton.Navigator.KryptonPage();
+            facturesAchatPage = new Krypton.Navigator.KryptonPage();
+            utilisateursPage = new Krypton.Navigator.KryptonPage();
+            mouvementsStockPage = new Krypton.Navigator.KryptonPage();
+            searchPanel = new Krypton.Toolkit.KryptonPanel();
+            headerPanel = new Krypton.Toolkit.KryptonPanel();
+            headerLabel = new Krypton.Toolkit.KryptonLabel();
+            ((System.ComponentModel.ISupportInitialize)tabControl).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)clientsPage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)fournisseursPage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)piecesPage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)facturesVentePage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)facturesAchatPage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)utilisateursPage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)mouvementsStockPage).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)searchPanel).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)headerPanel).BeginInit();
+            headerPanel.SuspendLayout();
+            SuspendLayout();
+            // 
+            // kryptonPalette
+            // 
+            kryptonPalette.UseThemeFormChromeBorderWidth = Krypton.Toolkit.InheritBool.True;
+            // 
+            // tabControl
+            // 
+            tabControl.ControlKryptonFormFeatures = false;
+            tabControl.Dock = DockStyle.Fill;
+            tabControl.Location = new Point(0, 130);
+            tabControl.NavigatorMode = Krypton.Navigator.NavigatorMode.BarTabGroup;
+            tabControl.Owner = null;
+            tabControl.PageBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelClient;
+            tabControl.Pages.AddRange(new Krypton.Navigator.KryptonPage[] { clientsPage, fournisseursPage, piecesPage, facturesVentePage, facturesAchatPage, utilisateursPage, mouvementsStockPage });
+            tabControl.SelectedIndex = 0;
+            tabControl.Size = new Size(1004, 458);
+            tabControl.StateCommon.Tab.Back.Color1 = Color.FromArgb(247, 247, 247);
+            tabControl.StateCommon.Tab.Back.Color2 = Color.FromArgb(247, 247, 247);
+            tabControl.StateCommon.Tab.Border.DrawBorders = Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom | Krypton.Toolkit.PaletteDrawBorders.Left | Krypton.Toolkit.PaletteDrawBorders.Right;
+            tabControl.StateCommon.Tab.Border.Width = 0;
+            tabControl.StateCommon.Tab.Content.ShortText.Color1 = Color.FromArgb(90, 90, 90);
+            tabControl.StateCommon.Tab.Content.ShortText.Font = new Font("Microsoft Sans Serif", 10F);
+            tabControl.StateSelected.Tab.Back.Color1 = Color.White;
+            tabControl.StateSelected.Tab.Content.ShortText.Color1 = Color.FromArgb(0, 122, 255);
+            tabControl.StateSelected.Tab.Content.ShortText.Font = new Font("Microsoft Sans Serif", 10F, FontStyle.Bold);
+            tabControl.TabIndex = 2;
+            // 
+            // clientsPage
+            // 
+            clientsPage.AutoHiddenSlideSize = new Size(200, 200);
+            clientsPage.Flags = 65534;
+            clientsPage.LastVisibleSet = true;
+            clientsPage.MinimumSize = new Size(50, 50);
+            clientsPage.Name = "clientsPage";
+            clientsPage.Size = new Size(1002, 433);
+            clientsPage.StateCommon.Page.Color1 = Color.White;
+            clientsPage.Text = "Clients";
+            clientsPage.ToolTipTitle = "Gestion des Clients";
+            clientsPage.UniqueName = "f1bcdbf20aee460ba2ea49e4223882e6";
+            // 
+            // fournisseursPage
+            // 
+            fournisseursPage.AutoHiddenSlideSize = new Size(200, 200);
+            fournisseursPage.Flags = 65534;
+            fournisseursPage.LastVisibleSet = true;
+            fournisseursPage.MinimumSize = new Size(50, 50);
+            fournisseursPage.Name = "fournisseursPage";
+            fournisseursPage.Size = new Size(150, 100);
+            fournisseursPage.StateCommon.Page.Color1 = Color.White;
+            fournisseursPage.Text = "Fournisseurs";
+            fournisseursPage.ToolTipTitle = "Gestion des Fournisseurs";
+            fournisseursPage.UniqueName = "b0aa19873661424f9b1424154c7cfd51";
+            // 
+            // piecesPage
+            // 
+            piecesPage.AutoHiddenSlideSize = new Size(200, 200);
+            piecesPage.Flags = 65534;
+            piecesPage.LastVisibleSet = true;
+            piecesPage.MinimumSize = new Size(50, 50);
+            piecesPage.Name = "piecesPage";
+            piecesPage.Size = new Size(150, 100);
+            piecesPage.StateCommon.Page.Color1 = Color.White;
+            piecesPage.Text = "Pièces";
+            piecesPage.ToolTipTitle = "Gestion des Pièces";
+            piecesPage.UniqueName = "4aec28ca760946f8809b239af5cc5074";
+            // 
+            // facturesVentePage
+            // 
+            facturesVentePage.AutoHiddenSlideSize = new Size(200, 200);
+            facturesVentePage.Flags = 65534;
+            facturesVentePage.LastVisibleSet = true;
+            facturesVentePage.MinimumSize = new Size(50, 50);
+            facturesVentePage.Name = "facturesVentePage";
+            facturesVentePage.Size = new Size(150, 100);
+            facturesVentePage.StateCommon.Page.Color1 = Color.White;
+            facturesVentePage.Text = "Factures Vente";
+            facturesVentePage.ToolTipTitle = "Gestion des Factures de Vente";
+            facturesVentePage.UniqueName = "0ec0eb910e4546f09875a129872a371f";
+            // 
+            // facturesAchatPage
+            // 
+            facturesAchatPage.AutoHiddenSlideSize = new Size(200, 200);
+            facturesAchatPage.Flags = 65534;
+            facturesAchatPage.LastVisibleSet = true;
+            facturesAchatPage.MinimumSize = new Size(50, 50);
+            facturesAchatPage.Name = "facturesAchatPage";
+            facturesAchatPage.Size = new Size(150, 100);
+            facturesAchatPage.StateCommon.Page.Color1 = Color.White;
+            facturesAchatPage.Text = "Factures Achat";
+            facturesAchatPage.ToolTipTitle = "Gestion des Factures d'Achat";
+            facturesAchatPage.UniqueName = "cf9427377dc54c5fb3b81ea09df61d51";
+            // 
+            // utilisateursPage
+            // 
+            utilisateursPage.AutoHiddenSlideSize = new Size(200, 200);
+            utilisateursPage.Flags = 65534;
+            utilisateursPage.LastVisibleSet = true;
+            utilisateursPage.MinimumSize = new Size(50, 50);
+            utilisateursPage.Name = "utilisateursPage";
+            utilisateursPage.Size = new Size(150, 100);
+            utilisateursPage.StateCommon.Page.Color1 = Color.White;
+            utilisateursPage.Text = "Utilisateurs";
+            utilisateursPage.ToolTipTitle = "Gestion des Utilisateurs";
+            utilisateursPage.UniqueName = "b67101b151d542ef98880da6228e4dbd";
+            // 
+            // mouvementsStockPage
+            // 
+            mouvementsStockPage.AutoHiddenSlideSize = new Size(200, 200);
+            mouvementsStockPage.Flags = 65534;
+            mouvementsStockPage.LastVisibleSet = true;
+            mouvementsStockPage.MinimumSize = new Size(50, 50);
+            mouvementsStockPage.Name = "mouvementsStockPage";
+            mouvementsStockPage.Size = new Size(150, 100);
+            mouvementsStockPage.StateCommon.Page.Color1 = Color.White;
+            mouvementsStockPage.Text = "Mouvements Stock";
+            mouvementsStockPage.ToolTipTitle = "Gestion des Mouvements de Stock";
+            mouvementsStockPage.UniqueName = "80deeb6062c744c49dfca5cae923fea8";
+            // 
+            // searchPanel
+            // 
+            searchPanel.Dock = DockStyle.Top;
+            searchPanel.Location = new Point(0, 60);
+            searchPanel.Name = "searchPanel";
+            searchPanel.Padding = new Padding(20, 15, 20, 15);
+            searchPanel.Size = new Size(1004, 70);
+            searchPanel.StateCommon.Color1 = Color.FromArgb(247, 247, 247);
+            searchPanel.TabIndex = 1;
+            // 
             // headerPanel
-            this.headerPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.headerPanel.Location = new System.Drawing.Point(0, 0);
-            this.headerPanel.Name = "headerPanel";
-            this.headerPanel.PanelBackStyle = Krypton.Toolkit.PaletteBackStyle.HeaderPrimary;
-            this.headerPanel.Size = new System.Drawing.Size(1000, 60);
-            this.headerPanel.StateCommon.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(247)))), ((int)(((byte)(247)))));
-            this.headerPanel.StateCommon.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(247)))), ((int)(((byte)(247)))));
-            this.headerPanel.TabIndex = 0;
-            this.headerPanel.Controls.Add(this.headerLabel);
-            
+            // 
+            headerPanel.Controls.Add(headerLabel);
+            headerPanel.Dock = DockStyle.Top;
+            headerPanel.Location = new Point(0, 0);
+            headerPanel.Name = "headerPanel";
+            headerPanel.PanelBackStyle = Krypton.Toolkit.PaletteBackStyle.HeaderPrimary;
+            headerPanel.Size = new Size(1004, 60);
+            headerPanel.StateCommon.Color1 = Color.FromArgb(247, 247, 247);
+            headerPanel.StateCommon.Color2 = Color.FromArgb(247, 247, 247);
+            headerPanel.TabIndex = 0;
+            // 
             // headerLabel
-            this.headerLabel.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
-            this.headerLabel.Location = new System.Drawing.Point(20, 15);
-            this.headerLabel.Name = "headerLabel";
-            this.headerLabel.Size = new System.Drawing.Size(250, 30);
-            this.headerLabel.StateCommon.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(255)))));
-            this.headerLabel.StateCommon.ShortText.Font = new System.Drawing.Font("SF Pro Display", 18F, System.Drawing.FontStyle.Bold);
-            this.headerLabel.TabIndex = 0;
-            this.headerLabel.Values.Text = "Gestion de Stock";
-            
-            // Search Panel
-            this.searchPanel.Controls.Add(this.searchButton);
-            this.searchPanel.Controls.Add(this.searchTextBox);
-            this.searchPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.searchPanel.Height = 70;
-            this.searchPanel.Location = new System.Drawing.Point(0, 60);
-            this.searchPanel.Name = "searchPanel";
-            this.searchPanel.PanelBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelClient;
-            this.searchPanel.StateCommon.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(247)))), ((int)(((byte)(247)))));
-            this.searchPanel.Size = new System.Drawing.Size(1000, 70);
-            this.searchPanel.TabIndex = 1;
-            this.searchPanel.Padding = new System.Windows.Forms.Padding(20, 15, 20, 15);
-            
-            // Search Button
-            this.searchButton.Location = new System.Drawing.Point(320, 15);
-            this.searchButton.Name = "searchButton";
-            this.searchButton.Size = new System.Drawing.Size(120, 40);
-            this.searchButton.TabIndex = 1;
-            this.searchButton.Values.Text = "Rechercher";
-            this.searchButton.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(255)))));
-            this.searchButton.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(255)))));
-            this.searchButton.StateCommon.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) | Krypton.Toolkit.PaletteDrawBorders.Left) | Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.searchButton.StateCommon.Border.Rounding = 10;
-            this.searchButton.StateCommon.Border.Width = 0;
-            this.searchButton.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.White;
-            this.searchButton.StateCommon.Content.ShortText.Font = new System.Drawing.Font("SF Pro Display", 10F, System.Drawing.FontStyle.Bold);
-            
-            // Search TextBox
-            this.searchTextBox.Location = new System.Drawing.Point(20, 15);
-            this.searchTextBox.Name = "searchTextBox";
-            this.searchTextBox.Size = new System.Drawing.Size(280, 40);
-            this.searchTextBox.StateCommon.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) | Krypton.Toolkit.PaletteDrawBorders.Left) | Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.searchTextBox.StateCommon.Border.Rounding = 10;
-            this.searchTextBox.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
-            this.searchTextBox.StateCommon.Content.Font = new System.Drawing.Font("SF Pro Display", 10F);
-            this.searchTextBox.TabIndex = 0;
-            this.searchTextBox.CueHint.CueHintText = "Recherche...";
-            
-            // TabControl
-            this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl.Location = new System.Drawing.Point(0, 130);
-            this.tabControl.Name = "tabControl";
-            this.tabControl.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
-                this.clientsPage,
-                this.fournisseursPage,
-                this.piecesPage,
-                this.facturesVentePage,
-                this.facturesAchatPage,
-                this.utilisateursPage,
-                this.mouvementsStockPage});
-            this.tabControl.Size = new System.Drawing.Size(1000, 470);
-            this.tabControl.TabIndex = 2;
-            this.tabControl.SelectedIndex = 0;
-            this.tabControl.StateCommon.Tab.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(247)))), ((int)(((byte)(247)))));
-            this.tabControl.StateCommon.Tab.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(247)))), ((int)(((byte)(247)))));
-            this.tabControl.StateCommon.Tab.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) | Krypton.Toolkit.PaletteDrawBorders.Left) | Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.tabControl.StateCommon.Tab.Border.Width = 0;
-            this.tabControl.StateCommon.Tab.Content.ShortText.Font = new System.Drawing.Font("SF Pro Display", 10F);
-            this.tabControl.StateCommon.Tab.Content.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
-            this.tabControl.StateSelected.Tab.Back.Color1 = System.Drawing.Color.White;
-            this.tabControl.StateSelected.Tab.Content.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(255)))));
-            this.tabControl.StateSelected.Tab.Content.ShortText.Font = new System.Drawing.Font("SF Pro Display", 10F, System.Drawing.FontStyle.Bold);
-            
-            // TabPages
-            this.clientsPage.Text = "Clients";
-            this.clientsPage.ToolTipTitle = "Gestion des Clients";
-            this.clientsPage.MinimumSize = new System.Drawing.Size(50, 50);
-            this.clientsPage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.clientsPage.StateCommon.Page.Color1 = System.Drawing.Color.White;
-            
-            this.fournisseursPage.Text = "Fournisseurs";
-            this.fournisseursPage.ToolTipTitle = "Gestion des Fournisseurs";
-            this.fournisseursPage.MinimumSize = new System.Drawing.Size(50, 50);
-            this.fournisseursPage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.fournisseursPage.StateCommon.Page.Color1 = System.Drawing.Color.White;
-            
-            this.piecesPage.Text = "Pièces";
-            this.piecesPage.ToolTipTitle = "Gestion des Pièces";
-            this.piecesPage.MinimumSize = new System.Drawing.Size(50, 50);
-            this.piecesPage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.piecesPage.StateCommon.Page.Color1 = System.Drawing.Color.White;
-            
-            this.facturesVentePage.Text = "Factures Vente";
-            this.facturesVentePage.ToolTipTitle = "Gestion des Factures de Vente";
-            this.facturesVentePage.MinimumSize = new System.Drawing.Size(50, 50);
-            this.facturesVentePage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.facturesVentePage.StateCommon.Page.Color1 = System.Drawing.Color.White;
-            
-            this.facturesAchatPage.Text = "Factures Achat";
-            this.facturesAchatPage.ToolTipTitle = "Gestion des Factures d'Achat";
-            this.facturesAchatPage.MinimumSize = new System.Drawing.Size(50, 50);
-            this.facturesAchatPage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.facturesAchatPage.StateCommon.Page.Color1 = System.Drawing.Color.White;
-            
-            this.utilisateursPage.Text = "Utilisateurs";
-            this.utilisateursPage.ToolTipTitle = "Gestion des Utilisateurs";
-            this.utilisateursPage.MinimumSize = new System.Drawing.Size(50, 50);
-            this.utilisateursPage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.utilisateursPage.StateCommon.Page.Color1 = System.Drawing.Color.White;
-            
-            this.mouvementsStockPage.Text = "Mouvements Stock";
-            this.mouvementsStockPage.ToolTipTitle = "Gestion des Mouvements de Stock";
-            this.mouvementsStockPage.MinimumSize = new System.Drawing.Size(50, 50);
-            this.mouvementsStockPage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.mouvementsStockPage.StateCommon.Page.Color1 = System.Drawing.Color.White;
-            
-            // Form
-            this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(1000, 600);
-            this.Controls.Add(this.tabControl);
-            this.Controls.Add(this.searchPanel);
-            this.Controls.Add(this.headerPanel);
-            this.Name = "MainForm";
-            this.Text = "Gestion de Stock";
-            
-            ((System.ComponentModel.ISupportInitialize)(this.tabControl)).EndInit();
-            this.tabControl.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.clientsPage)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.fournisseursPage)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.piecesPage)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.facturesVentePage)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.facturesAchatPage)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.utilisateursPage)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.mouvementsStockPage)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.searchPanel)).EndInit();
-            this.searchPanel.ResumeLayout(false);
-            this.searchPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.headerPanel)).EndInit();
-            this.headerPanel.ResumeLayout(false);
-            this.headerPanel.PerformLayout();
-            this.ResumeLayout(false);
+            // 
+            headerLabel.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
+            headerLabel.Location = new Point(20, 15);
+            headerLabel.Name = "headerLabel";
+            headerLabel.Size = new Size(209, 33);
+            headerLabel.StateCommon.ShortText.Color1 = Color.FromArgb(0, 122, 255);
+            headerLabel.StateCommon.ShortText.Font = new Font("Microsoft Sans Serif", 18F, FontStyle.Bold);
+            headerLabel.TabIndex = 0;
+            headerLabel.Values.Text = "Gestion de Stock";
+            // 
+            // MainForm
+            // 
+            BackColor = Color.White;
+            ClientSize = new Size(1004, 588);
+            Controls.Add(tabControl);
+            Controls.Add(searchPanel);
+            Controls.Add(headerPanel);
+            Name = "MainForm";
+            Text = "Gestion de Stock";
+            ((System.ComponentModel.ISupportInitialize)tabControl).EndInit();
+            ((System.ComponentModel.ISupportInitialize)clientsPage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)fournisseursPage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)piecesPage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)facturesVentePage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)facturesAchatPage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)utilisateursPage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)mouvementsStockPage).EndInit();
+            ((System.ComponentModel.ISupportInitialize)searchPanel).EndInit();
+            ((System.ComponentModel.ISupportInitialize)headerPanel).EndInit();
+            headerPanel.ResumeLayout(false);
+            headerPanel.PerformLayout();
+            ResumeLayout(false);
         }
 
         #endregion
@@ -224,8 +239,6 @@ namespace StockApp
         private Krypton.Navigator.KryptonPage facturesAchatPage;
         private Krypton.Navigator.KryptonPage utilisateursPage;
         private Krypton.Navigator.KryptonPage mouvementsStockPage;
-        private Krypton.Toolkit.KryptonTextBox searchTextBox;
-        private Krypton.Toolkit.KryptonButton searchButton;
         private Krypton.Toolkit.KryptonPanel searchPanel;
         private Krypton.Toolkit.KryptonPanel headerPanel;
         private Krypton.Toolkit.KryptonLabel headerLabel;

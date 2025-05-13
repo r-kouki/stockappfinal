@@ -29,13 +29,6 @@ namespace StockApp.PieceForms
         private void InitializeComponent()
         {
             this.piecesDataGridView = new System.Windows.Forms.DataGridView();
-            this.marqueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.referenceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.prixAchatHTColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.prixVenteHTColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.stockColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.seuilAlerteColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.tvaPctColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.buttonPanel = new System.Windows.Forms.Panel();
             this.addButton = new System.Windows.Forms.Button();
             this.editButton = new System.Windows.Forms.Button();
@@ -71,56 +64,12 @@ namespace StockApp.PieceForms
 
             // DataGridView Setup
             this.piecesDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.piecesDataGridView.AutoGenerateColumns = false;
             this.piecesDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.piecesDataGridView.MultiSelect = false;
             this.piecesDataGridView.AllowUserToAddRows = false;
             this.piecesDataGridView.AllowUserToDeleteRows = false;
             this.piecesDataGridView.ReadOnly = true;
             
-            // DataGridView Columns
-            this.marqueColumn.DataPropertyName = "Marque";
-            this.marqueColumn.HeaderText = "Marque";
-            this.marqueColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.referenceColumn.DataPropertyName = "Reference";
-            this.referenceColumn.HeaderText = "Référence";
-            this.referenceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.prixAchatHTColumn.DataPropertyName = "PrixAchatHT";
-            this.prixAchatHTColumn.HeaderText = "Prix Achat HT";
-            this.prixAchatHTColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.prixAchatHTColumn.DefaultCellStyle.Format = "C2";
-            
-            this.prixVenteHTColumn.DataPropertyName = "PrixVenteHT";
-            this.prixVenteHTColumn.HeaderText = "Prix Vente HT";
-            this.prixVenteHTColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.prixVenteHTColumn.DefaultCellStyle.Format = "C2";
-            
-            this.stockColumn.DataPropertyName = "Stock";
-            this.stockColumn.HeaderText = "Stock";
-            this.stockColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.seuilAlerteColumn.DataPropertyName = "SeuilAlerte";
-            this.seuilAlerteColumn.HeaderText = "Seuil Alerte";
-            this.seuilAlerteColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.tvaPctColumn.DataPropertyName = "TvaPct";
-            this.tvaPctColumn.HeaderText = "TVA %";
-            this.tvaPctColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.tvaPctColumn.DefaultCellStyle.Format = "P2";
-
-            // Add columns to DataGridView
-            this.piecesDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-                this.marqueColumn,
-                this.referenceColumn,
-                this.prixAchatHTColumn,
-                this.prixVenteHTColumn,
-                this.stockColumn,
-                this.seuilAlerteColumn,
-                this.tvaPctColumn
-            });
-
             // UserControl Setup
             this.Controls.Add(this.piecesDataGridView);
             this.Controls.Add(this.buttonPanel);
@@ -138,12 +87,5 @@ namespace StockApp.PieceForms
         private System.Windows.Forms.Button addButton;
         private System.Windows.Forms.Button editButton;
         private System.Windows.Forms.Button deleteButton;
-        private System.Windows.Forms.DataGridViewTextBoxColumn marqueColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn referenceColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn prixAchatHTColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn prixVenteHTColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn stockColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn seuilAlerteColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn tvaPctColumn;
     }
 } 

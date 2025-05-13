@@ -10,6 +10,9 @@ using StockApp.MouvementStockForms;
 using StockApp.PieceForms;
 using StockApp.UtilisateurForms;
 using Microsoft.EntityFrameworkCore;
+using StockApp.Data.Repositories;
+using StockApp.Data.Entities;
+using System.Threading.Tasks;
 
 namespace StockApp
 {
@@ -29,6 +32,7 @@ namespace StockApp
         [STAThread]
         static void Main()
         {
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -36,9 +40,6 @@ namespace StockApp
             Directory.CreateDirectory(Path.GetDirectoryName(DbPath));
             
             ConfigureServices();
-            
-            // Ensure the database is created and seeded
-            ServiceProvider.EnsureDatabaseCreated();
             
             // Show login form first
             var loginForm = ServiceProvider.GetRequiredService<LoginForm>();
@@ -86,9 +87,63 @@ namespace StockApp
             // Utilisateur forms
             services.AddTransient<UtilisateurManagementForm>();
             services.AddTransient<UtilisateurDetailsForm>();
-
+            
             // Build the service provider
             ServiceProvider = services.BuildServiceProvider();
+            
+            // Ensure the database is created and seeded
+            ServiceProvider.EnsureDatabaseCreated();
+        }
+        
+        private static async Task CreateTestUsersAsync()
+        {
+            try
+            {
+                using var scope = ServiceProvider.CreateScope();
+                var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+                
+                // Check if poly user exists
+                var polyUser = await userRepository.FindByUsernameAsync("poly");
+                if (polyUser == null)
+                {
+                    // Create poly/poly admin user
+                    var newPolyUser = new User
+                    {
+                        Username = "poly",
+                        Password = "poly",
+                        Nom = "Test",
+                        Prenom = "Admin",
+                        Role = Role.ADMIN,
+                        Actif = true
+                    };
+                    await userRepository.AddAsync(newPolyUser);
+                    System.Diagnostics.Debug.WriteLine("Created poly/poly admin user");
+                }
+                
+                // Check if regular user exists
+                var regularUser = await userRepository.FindByUsernameAsync("user");
+                if (regularUser == null)
+                {
+                    // Create user/user operator user
+                    var newRegularUser = new User
+                    {
+                        Username = "user",
+                        Password = "user",
+                        Nom = "Test",
+                        Prenom = "User",
+                        Role = Role.OPERATEUR,
+                        Actif = true
+                    };
+                    await userRepository.AddAsync(newRegularUser);
+                    System.Diagnostics.Debug.WriteLine("Created user/user operator user");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error creating test users: {ex.Message}");
+                MessageBox.Show($"Error creating test users: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // Continue with application startup even if user creation fails
+            }
         }
     }
 }

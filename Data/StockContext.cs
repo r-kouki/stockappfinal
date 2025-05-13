@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using StockApp.Data.Entities;
 
 namespace StockApp.Data
@@ -77,20 +78,45 @@ namespace StockApp.Data
                 .WithMany(p => p.MouvementsStock)
                 .HasForeignKey(ms => ms.PieceId);
 
-            // Seed initial admin user
+            // Seed initial admin user with secure hashing
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
                     Id = "25UR000001", // Using the new ID format
                     Username = "admin",
-                    Password = "admin", // In a real app, use password hashing
-                    PasswordHash = "admin", // In a real app, use password hashing
+                    Password = "admin", // Plain text for reference
+                    PasswordHash = "jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=", // Hash of "admin" with empty salt
+                    Salt = "",
                     Prenom = "Admin",
                     Nom = "Admin",
                     Role = Role.ADMIN,
                     Actif = true
+                    // Not setting CreatedAt to allow backward compatibility
                 }
             );
+        }
+    }
+
+    // Extension method to get DbContextOptions from an existing context
+    public static class DbContextExtensions
+    {
+        public static DbContextOptions<StockContext> GetDbContextOptions(this DbContext context)
+        {
+            // Create a new options builder and copy options from the existing context
+            var optionsBuilder = new DbContextOptionsBuilder<StockContext>();
+            
+            // This copies connection string and other configurations
+            if (context is StockContext stockContext)
+            {
+                var connectionString = context.Database.GetConnectionString();
+                optionsBuilder.UseSqlite(connectionString);
+                
+                // Copy other configurations as needed
+                optionsBuilder.EnableSensitiveDataLogging();
+                optionsBuilder.EnableDetailedErrors();
+            }
+            
+            return optionsBuilder.Options;
         }
     }
 } 

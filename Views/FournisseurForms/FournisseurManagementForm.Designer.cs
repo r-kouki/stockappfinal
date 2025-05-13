@@ -29,12 +29,6 @@ namespace StockApp.FournisseurForms
         private void InitializeComponent()
         {
             this.fournisseursDataGridView = new System.Windows.Forms.DataGridView();
-            this.nomColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.prenomColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.matFiscalColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.adresseColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.telephoneColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.creditColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.buttonPanel = new System.Windows.Forms.Panel();
             this.addButton = new System.Windows.Forms.Button();
             this.editButton = new System.Windows.Forms.Button();
@@ -70,50 +64,12 @@ namespace StockApp.FournisseurForms
 
             // DataGridView Setup
             this.fournisseursDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fournisseursDataGridView.AutoGenerateColumns = false;
             this.fournisseursDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.fournisseursDataGridView.MultiSelect = false;
             this.fournisseursDataGridView.AllowUserToAddRows = false;
             this.fournisseursDataGridView.AllowUserToDeleteRows = false;
             this.fournisseursDataGridView.ReadOnly = true;
             
-            // DataGridView Columns
-            this.nomColumn.DataPropertyName = "Nom";
-            this.nomColumn.HeaderText = "Nom";
-            this.nomColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.prenomColumn.DataPropertyName = "Prenom";
-            this.prenomColumn.HeaderText = "Prénom";
-            this.prenomColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.matFiscalColumn.DataPropertyName = "MatFiscal";
-            this.matFiscalColumn.HeaderText = "Matricule Fiscal";
-            this.matFiscalColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.adresseColumn.DataPropertyName = "Adresse";
-            this.adresseColumn.HeaderText = "Adresse";
-            this.adresseColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.adresseColumn.Width = 200;
-            
-            this.telephoneColumn.DataPropertyName = "Telephone";
-            this.telephoneColumn.HeaderText = "Téléphone";
-            this.telephoneColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            
-            this.creditColumn.DataPropertyName = "Credit";
-            this.creditColumn.HeaderText = "Crédit";
-            this.creditColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.creditColumn.DefaultCellStyle.Format = "C2";
-
-            // Add columns to DataGridView
-            this.fournisseursDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-                this.nomColumn,
-                this.prenomColumn,
-                this.matFiscalColumn,
-                this.adresseColumn,
-                this.telephoneColumn,
-                this.creditColumn
-            });
-
             // UserControl Setup
             this.Controls.Add(this.fournisseursDataGridView);
             this.Controls.Add(this.buttonPanel);
@@ -131,11 +87,5 @@ namespace StockApp.FournisseurForms
         private System.Windows.Forms.Button addButton;
         private System.Windows.Forms.Button editButton;
         private System.Windows.Forms.Button deleteButton;
-        private System.Windows.Forms.DataGridViewTextBoxColumn nomColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn prenomColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn matFiscalColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn adresseColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn telephoneColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn creditColumn;
     }
 } 
